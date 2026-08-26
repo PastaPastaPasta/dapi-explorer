@@ -1,5 +1,5 @@
 import DAPIClient, { type DAPIClientInstance } from '@dashevo/dapi-client';
-import type { NetworkType } from './networks';
+import { networks, type NetworkType } from './networks';
 
 let clientInstance: DAPIClientInstance | null = null;
 let currentNetwork: NetworkType | null = null;
@@ -15,6 +15,7 @@ export function getClient(network: NetworkType): DAPIClientInstance {
 
   clientInstance = new DAPIClient({
     network,
+    dapiAddresses: networks[network].dapiAddresses,
     timeout: 30000,
     retries: 3,
   }) as DAPIClientInstance;
