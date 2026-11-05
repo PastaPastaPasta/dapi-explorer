@@ -43,7 +43,9 @@ test('credit units render only beside a valid amount, including zero', () => {
   assert.match(amount, />98647006122<\/dashhq-hash> credits/);
 });
 test('hashes have visible fallback text and missing hashes have an explanation', () => {
-  assert.match(render(HashValue, { value: '', label: 'Hash' }), /Not reported/);
+  for (const value of ['', null, undefined, 7, {}]) assert.match(render(HashValue, { value, label: 'Hash' }), /Not reported/);
+  assert.match(render(HashValue, { value: new Uint8Array([1, 255]), label: 'Hash' }), />01ff<\/dashhq-hash>/);
+  assert.match(render(HashValue, { value: [1, 255], label: 'Hash' }), />01ff<\/dashhq-hash>/);
   const html = render(HashValue, { value: 'abc123', label: 'Hash' });
   assert.match(html, />abc123<\/dashhq-hash>/);
 });

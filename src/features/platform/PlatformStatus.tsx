@@ -4,7 +4,7 @@ import { HashValue } from '../../components/HashValue';
 import { Card, Stat } from '../../components/Card';
 import { Reading, ReadError } from '../../components/ReadState';
 import { usePlatformStatus, useTotalCredits } from '../../hooks/usePlatformStatus';
-import { formatNumber, truncateHash } from '../../lib/format';
+import { formatNumber, hashText } from '../../lib/format';
 
 export function PlatformStatus() {
   const selectedNetwork = useNetworkStore(s => s.network);
@@ -19,7 +19,7 @@ export function PlatformStatus() {
 
   const s = status;
   const software = s?.version?.software;
-  const proTxHash = s?.toJSON()?.node?.proTxHash;
+  const proTxHash = hashText(s?.toJSON()?.node?.proTxHash);
   const chain = s?.chain;
   const network = s?.network;
   const time = s?.time;
@@ -92,7 +92,7 @@ export function PlatformStatus() {
               <Stat
                 label="Latest block hash"
                 value={
-                  chain?.latest_block_hash ? truncateHash(String(chain.latest_block_hash)) : 'N/A'
+                  <HashValue value={chain?.latest_block_hash} label="Latest Platform block hash" />
                 }
                 mono
               />
@@ -138,7 +138,7 @@ export function PlatformStatus() {
               />
             )}
             <dl className="dh-stats grid grid-cols-2 gap-4">
-              <Stat label="Node ID" value={node?.id ? truncateHash(node.id) : 'N/A'} mono />
+              <Stat label="Node ID" value={<HashValue value={node?.id} label="Platform node ID" />} mono />
               <Stat
                 label="ProTx hash"
                 value={

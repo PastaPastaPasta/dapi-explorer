@@ -73,3 +73,11 @@ export function creditValue(value: unknown): bigint | null {
   if (typeof value === 'string' && !/^\d+$/.test(value)) return null;
   try { const parsed = BigInt(value); return parsed >= 0n ? parsed : null; } catch { return null; }
 }
+
+export function hashText(value: unknown): string | null {
+  if (typeof value === 'string') return value.trim() || null;
+  if (value instanceof Uint8Array || (Array.isArray(value) && value.length > 0 && value.every(byte => Number.isInteger(byte) && byte >= 0 && byte <= 255))) {
+    return Array.from(value as Uint8Array).map(byte => byte.toString(16).padStart(2, '0')).join('') || null;
+  }
+  return null;
+}
