@@ -35,7 +35,7 @@ export function Layout({ children, tabs, activeTab, onTabChange }: LayoutProps) 
       </nav>
     </dashhq-bar>
     <main id="main" className="dh-container dh-page">
-      <p className="dh-crumbs"><a href={window.dashhq.href('explorer', '/tools/', { network })}>Explorer tools</a><span aria-hidden="true"> › </span>DAPI console</p>
+      <p className="dh-crumbs"><a href={window.dashhq.href('explorer', '/tools/', { network })}>Explorer tools</a><span>DAPI console</span></p>
       <header className="dh-page-header">
         <h1 className="dh-page-header__title">{activeTab === 'dashboard' ? 'Read a node’s status' : activeTab === 'core' ? 'Inspect Core data' : activeTab === 'platform' ? 'Look up Platform data' : 'Follow new Core blocks'}</h1>
         <p className="dh-page-header__lede">{activeTab === 'dashboard' ? 'Check Core and Platform responses from a node, then inspect an identity, contract or block.' : activeTab === 'core' ? 'Find a block or transaction and inspect its response.' : activeTab === 'platform' ? 'Read an identity, contract or epoch from the selected network.' : 'Watch the latest block height as this node reports it.'}</p>
