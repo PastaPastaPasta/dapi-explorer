@@ -24,7 +24,7 @@ export function BlockchainStatus() {
       {status && <p className="text-xs text-gray-500 mb-4">Reported by a Core node; refreshed every 10 seconds.</p>}
       {status?.status === 'ERROR' && <p className="text-sm text-yellow-600 mb-4">The node answered, but reports a health error. Sync progress alone does not indicate node health.</p>}
       {status && hasExpectedStructure && (
-        <dl className="dh-stats grid grid-cols-2 md:grid-cols-3 gap-4">
+        <dl className="dh-stats grid grid-cols-2 md:grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-4">
           <Stat label="Chain" value={status.chain?.name ?? 'N/A'} />
           <Stat label="Node health" value={<span className={`dh-status dh-status--${health.tone}`}>{health.label}</span>} />
           <Stat
