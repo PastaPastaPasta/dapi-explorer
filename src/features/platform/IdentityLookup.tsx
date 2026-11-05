@@ -7,6 +7,7 @@ import { JsonView } from '../../components/JsonView';
 import { platformRead } from '../../lib/platform';
 import { useNetworkStore } from '../../store/network';
 import { BalanceStat } from '../../components/BalanceStat';
+import { NetworkRecovery } from '../../components/NetworkRecovery';
 import { identifierToBytes, identifierToBase58 } from '../../lib/identifier';
 
 export function IdentityLookup() {
@@ -66,9 +67,9 @@ export function IdentityLookup() {
       {isLoading && <Reading subject="the lookup result" />}
       {error && !isLoading && <ReadError error={error} subject="the lookup result" onRetry={() => void refetch()} />}
 
-      {submitted && data && <p className="text-sm mb-4"><a href={window.dashhq.href('explorer', '/identity/?id=' + identifierToBase58(submitted), { network })}>Open identity in Explorer →</a></p>}
+      {submitted && data?.identity && <p className="text-sm mb-4"><a href={window.dashhq.href('explorer', '/identity/?id=' + identifierToBase58(submitted), { network })}>Open identity in Explorer →</a></p>}
 
-      {data && !data.identity && <p className="dh-empty dh-empty--inline">No identity found on {network === 'mainnet' ? 'Mainnet' : 'Testnet'}. Check the ID or change the network.</p>}
+      {data && !data.identity && !isLoading && !error && <NetworkRecovery kind="identity" id={submitted} />}
       {data?.identity ? (
         <div className="space-y-4">
           {data.balance ? (

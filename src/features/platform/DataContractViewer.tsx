@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useUrlParam } from '../../lib/location';
 import { ReadError, Reading } from '../../components/ReadState';
 import { Card } from '../../components/Card';
+import { NetworkRecovery } from '../../components/NetworkRecovery';
 import { JsonView } from '../../components/JsonView';
 import { platformRead } from '../../lib/platform';
 import { useNetworkStore } from '../../store/network';
@@ -89,7 +90,7 @@ export function DataContractViewer() {
 
       {isLoading && <Reading subject="the lookup result" />}
       {error && !isLoading && <ReadError error={error} subject="the lookup result" onRetry={() => void refetch()} />}
-      {isSuccess && !isLoading && !data && <p className="dh-empty dh-empty--inline">No contract found on {network === 'mainnet' ? 'Mainnet' : 'Testnet'}. Check the ID or change the network.</p>}
+      {submitted && isSuccess && !isLoading && !data && <NetworkRecovery kind="contract" id={submitted} />}
 
       {submitted && data && <p className="text-sm mb-4"><a href={window.dashhq.href('explorer', '/contract/?id=' + identifierToBase58(submitted), { network })}>Open contract in Explorer →</a></p>}
 
