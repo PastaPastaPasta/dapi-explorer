@@ -49,10 +49,10 @@ export function PlatformStatus() {
               <div>
                 <dt>Tenderdash</dt>
                 <dd>
-                  {software?.tenderdash ? <details>
-                    <summary>Exact software build</summary>
-                    <HashValue value={String(software.tenderdash)} label="Tenderdash build" full />
-                  </details> : <span>— · Not reported by this node</span>}
+                  {software?.tenderdash ? <>
+                    <HashValue value={String(software.tenderdash)} label="Tenderdash version" />
+                    <details><summary>Exact software build</summary><HashValue value={String(software.tenderdash)} label="Tenderdash build" full /></details>
+                  </> : <span>— · Not reported by this node</span>}
                 </dd>
               </div>
             </dl>
@@ -64,7 +64,7 @@ export function PlatformStatus() {
               <Stat
                 label="Latest block height"
                 value={
-                  chain?.latest_block_height
+                  chain?.latest_block_height != null
                     ? formatNumber(String(chain.latest_block_height))
                     : 'N/A'
                 }
@@ -72,7 +72,7 @@ export function PlatformStatus() {
               <Stat
                 label="Core ChainLock height"
                 value={
-                  chain?.core_chain_locked_height
+                  chain?.core_chain_locked_height != null
                     ? formatNumber(String(chain.core_chain_locked_height))
                     : 'N/A'
                 }
@@ -99,7 +99,7 @@ export function PlatformStatus() {
               <Stat
                 label="Max peer block height"
                 value={
-                  chain?.max_peer_block_height
+                  chain?.max_peer_block_height != null
                     ? formatNumber(String(chain.max_peer_block_height))
                     : 'N/A'
                 }
