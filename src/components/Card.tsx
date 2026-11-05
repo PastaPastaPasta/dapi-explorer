@@ -36,7 +36,9 @@ interface StatProps {
 }
 
 export function Stat({ label, value, mono }: StatProps) {
-  const missing = value === undefined || value === null || value === '' || value === 'N/A';
+  const missing = value == null ||
+    (typeof value === 'string' && (!value.trim() || value === 'N/A')) ||
+    (typeof value === 'number' && !Number.isFinite(value));
   return (
     <div className="dh-stat min-w-0">
       <dt className="dh-stat__label">{label}</dt>

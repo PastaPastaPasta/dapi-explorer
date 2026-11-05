@@ -26,7 +26,7 @@ const { HashValue } = await import(moduleUrl(new URL('../src/components/HashValu
 const render = (component, props) => renderToStaticMarkup(React.createElement(component, props));
 
 test('missing values have a reason while zero is an actual value', () => {
-  for (const value of [undefined, null, '', 'N/A']) assert.match(render(Stat, { label: 'Peers', value }), /— · Not reported by this node/);
+  for (const value of [undefined, null, '', ' ', 'N/A', NaN, Infinity]) assert.match(render(Stat, { label: 'Peers', value }), /— · Not reported by this node/);
   assert.match(render(Stat, { label: 'Peers', value: 0 }), />0<\/dd>/);
 });
 test('credit units render only beside a valid amount, including zero', () => {

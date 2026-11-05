@@ -31,9 +31,9 @@ export function EpochInfo() {
           <div>
             <h3 className="dh-h3 mb-3">Consensus parameters</h3>
             <dl className="dh-stats">
-              <Stat label="Max block bytes" value={consensusParams.block?.maxBytes ? formatBytes(parseInt(consensusParams.block.maxBytes, 10)) : 'N/A'} />
-              <Stat label="Max evidence age (blocks)" value={consensusParams.evidence?.maxAgeNumBlocks ? formatNumber(consensusParams.evidence.maxAgeNumBlocks) : 'N/A'} />
-              <Stat label="Max evidence bytes" value={consensusParams.evidence?.maxBytes ? formatBytes(parseInt(consensusParams.evidence.maxBytes, 10)) : 'N/A'} />
+              <Stat label="Max block bytes" value={consensusParams.block?.maxBytes ? formatBytes(parseInt(consensusParams.block.maxBytes, 10)) : '— · Not reported by this node'} />
+              <Stat label="Max evidence age (blocks)" value={consensusParams.evidence?.maxAgeNumBlocks ? formatNumber(consensusParams.evidence.maxAgeNumBlocks) : '— · Not reported by this node'} />
+              <Stat label="Max evidence bytes" value={consensusParams.evidence?.maxBytes ? formatBytes(parseInt(consensusParams.evidence.maxBytes, 10)) : '— · Not reported by this node'} />
             </dl>
           </div>
         )}
@@ -55,17 +55,17 @@ export function EpochInfo() {
                 <tbody className="divide-y divide-gray-100">
                   {epochsData.epochsInfo.map((epoch, idx) => (
                     <tr key={epoch?.index ?? idx} className="hover:bg-gray-50">
-                      <td data-label="Epoch" className="dh-rc-title">{epoch?.index ?? 'N/A'}</td>
+                      <td data-label="Epoch" className="dh-rc-title">{epoch?.index ?? '— · Not reported by this node'}</td>
                       <td data-label="Start block" className="px-3 py-2 font-mono text-xs">
-                        {epoch?.firstBlockHeight ? formatNumber(epoch.firstBlockHeight) : 'N/A'}
+                        {epoch?.firstBlockHeight != null ? formatNumber(epoch.firstBlockHeight) : '— · Not reported by this node'}
                       </td>
                       <td data-label="Core block" className="px-3 py-2 font-mono text-xs">
-                        {epoch?.firstCoreBlockHeight ? formatNumber(epoch.firstCoreBlockHeight) : 'N/A'}
+                        {epoch?.firstCoreBlockHeight != null ? formatNumber(epoch.firstCoreBlockHeight) : '— · Not reported by this node'}
                       </td>
                       <td data-label="Start time" className="px-3 py-2 text-gray-600 text-xs">
-                        {epoch?.firstBlockTime ? formatTimestamp(epoch.firstBlockTime, 'milliseconds') : 'N/A'}
+                        {epoch?.firstBlockTime != null ? formatTimestamp(epoch.firstBlockTime, 'milliseconds') : '— · Not reported by this node'}
                       </td>
-                      <td data-label="Fee multiplier" className="px-3 py-2">{epoch?.feeMultiplier?.toFixed?.(4) ?? 'N/A'}</td>
+                      <td data-label="Fee multiplier" className="px-3 py-2">{epoch?.feeMultiplier?.toFixed?.(4) ?? '— · Not reported by this node'}</td>
                     </tr>
                   ))}
                 </tbody>
