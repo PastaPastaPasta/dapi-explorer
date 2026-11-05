@@ -89,7 +89,7 @@ export function BlockStream() {
           <button
             onClick={isStreaming ? stopStream : startStream}
             disabled={!currentHeight}
-            className="lookup-button px-4 py-1.5 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            className="dh-btn dh-btn--primary"
           >
             {isStreaming ? 'Stop' : 'Start'} stream
           </button>
@@ -109,7 +109,7 @@ export function BlockStream() {
 
         {blocks.length > 0 && (
           <div className="border border-gray-200 rounded overflow-hidden">
-            <table className="w-full text-sm">
+            <table className="dh-table dh-table--cards">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-3 py-2 text-left font-medium text-gray-600">Height</th>
@@ -121,7 +121,7 @@ export function BlockStream() {
               <tbody className="divide-y divide-gray-100">
                 {blocks.map((block) => (
                   <tr key={block.height} className="hover:bg-gray-50">
-                    <td data-label="Height" className="px-3 py-2 font-mono">{block.height}</td>
+                    <td data-label="Height" className="dh-rc-title">{block.height}</td>
                     <td data-label="Hash" className="px-3 py-2 font-mono text-xs">
                       <dashhq-hash value={block.hash} label="Block hash" />
                     </td>
@@ -130,10 +130,10 @@ export function BlockStream() {
                     </td>
                     <td data-label="ChainLock" className="px-3 py-2">
                       <span
-                        className={`inline-flex px-2 py-0.5 rounded text-xs ${
+                        className={`dh-badge ${
                           block.chainLocked
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-gray-100 text-gray-600'
+                            ? 'dh-badge--good'
+                            : 'dh-badge--outline'
                         }`}
                       >
                         {block.chainLocked ? 'Yes' : 'No'}
@@ -147,7 +147,7 @@ export function BlockStream() {
         )}
 
         {blocks.length === 0 && !isStreaming && (
-          <p className="text-gray-500 text-sm">Start the stream to receive real-time block headers.</p>
+          <p className="dh-empty dh-empty--inline">Start the stream to receive real-time block headers.</p>
         )}
       </div>
     </Card>

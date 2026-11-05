@@ -24,7 +24,7 @@ test('Explorer base58 identities and hex refer to exactly the same 32 bytes', ()
 test('health errors and unknown health can never produce green reachability', () => {
   assert.equal(coreHealth('READY').label, 'Reachable');
   assert.equal(coreHealth('ERROR').label, 'Health error');
-  assert.notEqual(coreHealth('ERROR').className, coreHealth('READY').className);
+  assert.notEqual(coreHealth('ERROR').tone, coreHealth('READY').tone);
   assert.equal(coreHealth(undefined).label, 'Health unknown');
 });
 test('reads settle at their deadline and retain successful responses', async () => {

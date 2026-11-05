@@ -36,12 +36,12 @@ export function Layout({ children, tabs, activeTab, onTabChange }: LayoutProps) 
         })}
       </nav>
     </dashhq-bar>
-    <main id="main" className="app-main">
-      <div className="page-intro">
-        <p className="tool-links"><a href={window.dashhq.href('explorer', '/', { network })}>Explorer</a><span>/</span><span>Tools</span><a href={window.dashhq.href('fees', '/?network=' + network)}>Fee estimator →</a></p>
-        <h1>DAPI console</h1>
-        <p>Read Core and Platform directly from a node. Responses are diagnostic data. Open Explorer for proof verification details.</p>
-      </div>
+    <main id="main" className="dh-container dh-page">
+      <header className="dh-page-header">
+
+        <h1 className="dh-page-header__title">DAPI console</h1>
+        <p className="dh-page-header__lede">Read Core and Platform directly from a node. Responses are diagnostic data. Open Explorer for proof verification details.</p>
+      </header>
       {children}
     </main>
     <dashhq-footer product="dapi" source="https://github.com/PastaPastaPasta/dapi-explorer">

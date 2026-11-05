@@ -48,26 +48,27 @@ export function DataContractViewer() {
 
   return (
     <Card title="Data contract">
-      <form onSubmit={handleSubmit} className="lookup-form space-y-3 mb-4">
-        <label htmlFor="contract-input">Contract ID (base58 or hex)</label>
-        <div className="lookup-fields">
+      <form onSubmit={handleSubmit} className="dh-field mb-4">
+        <label className="dh-field__label" htmlFor="contract-input">Contract ID (base58 or hex)</label>
+        <div className="dh-inline-form">
           <input
-            id="contract-input"
+            id="contract-input" aria-describedby="contract-input-help"
             required
             title="Use a base58 Platform ID or 64 hexadecimal characters."
             type="text"
             value={contractId}
             onChange={(e) => setContractId(e.target.value)}
-            placeholder="Data Contract ID (base58 or hex)"
-            className="flex-1 border border-gray-300 rounded px-3 py-1.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand"
+            placeholder="Contract ID (base58 or hex)"
+            className="dh-input dh-input--mono flex-1"
           />
           <button
             type="submit"
-            className="lookup-button px-4 py-1.5 rounded text-sm transition-colors"
+            className="dh-btn"
           >
             Fetch contract
           </button>
         </div>
+        <p className="dh-field__help" id="contract-input-help">Use a base58 contract ID or its hexadecimal representation.</p>
       </form>
 
       <div className="mb-4">
@@ -77,7 +78,7 @@ export function DataContractViewer() {
             <button
               key={contract.id}
               onClick={() => handleKnownContract(contract.id)}
-              className="text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded transition-colors"
+              className="dh-btn dh-btn--sm"
               title={contract.description}
             >
               {contract.name}
@@ -88,13 +89,13 @@ export function DataContractViewer() {
 
       {isLoading && <Reading subject="the lookup result" />}
       {error && !isLoading && <ReadError error={error} subject="the lookup result" onRetry={() => void refetch()} />}
-      {isSuccess && !isLoading && !data && <p className="text-sm">No contract found on {network === 'mainnet' ? 'Mainnet' : 'Testnet'}. Check the ID or change the network.</p>}
+      {isSuccess && !isLoading && !data && <p className="dh-empty dh-empty--inline">No contract found on {network === 'mainnet' ? 'Mainnet' : 'Testnet'}. Check the ID or change the network.</p>}
 
       {submitted && data && <p className="text-sm mb-4"><a href={window.dashhq.href('explorer', '/contract/?id=' + identifierToBase58(submitted), { network })}>Open contract in Explorer →</a></p>}
 
       {data ? (
         <div>
-          <dt className="text-xs text-gray-500 mb-2">Contract schema</dt>
+          <p className="text-xs text-gray-500 mb-2">Contract schema</p>
           <JsonView data={data} maxHeight="500px" />
         </div>
       ) : null}

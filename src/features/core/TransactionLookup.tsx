@@ -35,26 +35,27 @@ export function TransactionLookup() {
 
   return (
     <Card title="Transaction lookup">
-      <form onSubmit={handleSubmit} className="lookup-form space-y-3 mb-4">
-        <label htmlFor="tx-input">Transaction ID (64 hexadecimal characters)</label>
-        <div className="lookup-fields">
+      <form onSubmit={handleSubmit} className="dh-field mb-4">
+        <label className="dh-field__label" htmlFor="tx-input">Transaction ID (64 hexadecimal characters)</label>
+        <div className="dh-inline-form">
           <input
-            id="tx-input"
+            id="tx-input" aria-describedby="tx-input-help"
             required pattern="(?:0x)?[0-9a-fA-F]{64}"
             title="Use a 32-byte ID: 64 hexadecimal characters."
             type="text"
             value={txid}
             onChange={(e) => setTxid(e.target.value)}
             placeholder="Transaction ID (txid)"
-            className="flex-1 border border-gray-300 rounded px-3 py-1.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand"
+            className="dh-input dh-input--mono flex-1"
           />
           <button
             type="submit"
-            className="lookup-button px-4 py-1.5 rounded text-sm transition-colors"
+            className="dh-btn"
           >
             Look up transaction
           </button>
         </div>
+        <p className="dh-field__help" id="tx-input-help">Use the full 64-character hexadecimal transaction ID.</p>
       </form>
 
       {isLoading && <Reading subject="the lookup result" />}
@@ -62,11 +63,11 @@ export function TransactionLookup() {
 
       {data && (
         <div className="space-y-3">
-          <div className="grid grid-cols-2 gap-4">
+          <dl className="dh-stats grid grid-cols-2 gap-4">
             <Stat label="Height" value={data.height} />
             <Stat label="Confirmations" value={data.confirmations} />
             <Stat
-              label="Block Hash"
+              label="Block hash"
               value={<dashhq-hash value={bytesToHex(data.blockHash)} label="Block hash" />}
               mono
             />
@@ -86,9 +87,9 @@ export function TransactionLookup() {
                 </span>
               }
             />
-          </div>
+          </dl>
           <div>
-            <dt className="text-xs text-gray-500 mb-2">Raw transaction (hex)</dt>
+            <p className="text-xs text-gray-500 mb-2">Raw transaction (hex)</p>
             <pre className="bg-gray-50 rounded p-3 text-xs font-mono overflow-auto max-h-48 break-all">
               {bytesToHex(data.transaction)}
             </pre>

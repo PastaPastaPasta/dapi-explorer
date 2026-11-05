@@ -24,7 +24,7 @@ export function JsonView({ data, maxHeight = '400px' }: JsonViewProps) {
     <div className="relative">
       <button
         onClick={() => setExpanded(!expanded)}
-        className="mb-2 text-xs text-gray-500 hover:text-gray-700 bg-gray-100 px-2 py-1 rounded"
+        className="mb-2 dh-btn dh-btn--sm"
       >
         {expanded ? 'Collapse' : 'Expand'}
       </button>

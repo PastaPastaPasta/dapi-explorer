@@ -1,5 +1,7 @@
+import preset from './public/dashhq/dashhq-tailwind-preset.cjs';
 /** @type {import('tailwindcss').Config} */
 export default {
+  presets: [preset],
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   darkMode: ['selector', '[data-theme="dark"]'],
   theme: {

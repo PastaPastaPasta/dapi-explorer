@@ -12,9 +12,9 @@ export async function withDeadline<T>(request: Promise<T>, timeoutMs = 18000): P
   }
 }
 
-export function coreHealth(status: string | undefined): { label: string; className: string } {
-  if (status === 'READY') return { label: 'Reachable', className: 'text-green-600' };
-  if (status === 'ERROR') return { label: 'Health error', className: 'text-yellow-600' };
-  if (status === 'SYNCING') return { label: 'Syncing', className: 'text-yellow-600' };
-  return { label: 'Health unknown', className: 'text-gray-500' };
+export function coreHealth(status: string | undefined): { label: string; tone: string } {
+  if (status === 'READY') return { label: 'Reachable', tone: 'good' };
+  if (status === 'ERROR') return { label: 'Health error', tone: 'warn' };
+  if (status === 'SYNCING') return { label: 'Syncing', tone: 'warn' };
+  return { label: 'Health unknown', tone: 'info' };
 }

@@ -12,11 +12,11 @@ interface CardProps {
 
 export function Card({ title, children, className = '', loading, error, onRetry }: CardProps) {
   return (
-    <div className={`panel bg-white rounded-lg border border-gray-200 ${className}`}>
-      <div className="px-4 py-3 border-b border-gray-100">
-        <h3 className="font-medium text-gray-900">{title}</h3>
+    <div className={`dh-card dh-card--flush ${className}`}>
+      <div className="dh-card__head">
+        <h2 className="dh-card__title">{title}</h2>
       </div>
-      <div className="p-4">
+      <div className="px-4 pb-4 md:px-5">
         {loading ? (
           <Reading subject={title.toLowerCase()} />
         ) : error ? (
@@ -37,9 +37,9 @@ interface StatProps {
 
 export function Stat({ label, value, mono }: StatProps) {
   return (
-    <div className="py-2">
-      <dt className="text-xs text-gray-500">{label}</dt>
-      <dd className={`stat-value mt-1 text-gray-900 ${mono ? 'font-mono text-sm break-all' : ''}`}>
+    <div className="dh-stat">
+      <dt className="dh-stat__label">{label}</dt>
+      <dd className={`dh-stat__value ${mono ? 'font-mono break-all' : ''}`}>
         {value}
       </dd>
     </div>

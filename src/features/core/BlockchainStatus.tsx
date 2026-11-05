@@ -24,9 +24,9 @@ export function BlockchainStatus() {
       {status && <p className="text-xs text-gray-500 mb-4">Reported by a Core node; refreshed every 10 seconds.</p>}
       {status?.status === 'ERROR' && <p className="text-sm text-yellow-600 mb-4">The node answered, but reports a health error. Sync progress alone does not indicate node health.</p>}
       {status && hasExpectedStructure && (
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <dl className="dh-stats grid grid-cols-2 md:grid-cols-3 gap-4">
           <Stat label="Chain" value={status.chain?.name ?? 'N/A'} />
-          <Stat label="Node health" value={<span className={health.className}>{health.label}</span>} />
+          <Stat label="Node health" value={<span className={`dh-status dh-status--${health.tone}`}>{health.label}</span>} />
           <Stat
             label="Synced"
             value={
@@ -48,7 +48,7 @@ export function BlockchainStatus() {
           <Stat label="Protocol version" value={status.version?.protocol ?? 'N/A'} />
           <Stat label="Agent" value={status.version?.agent ?? 'N/A'} />
           <Stat label="Difficulty" value={status.chain?.difficulty ? formatNumber(Math.round(status.chain.difficulty)) : 'N/A'} />
-        </div>
+        </dl>
       )}
       {status && <details className="mt-4 text-sm"><summary>Raw node response</summary><JsonView data={status} /></details>}
     </Card>

@@ -44,32 +44,33 @@ export function BlockExplorer() {
 
   return (
     <Card title="Block lookup">
-      <form onSubmit={handleSubmit} className="lookup-form space-y-3 mb-4">
-        <label htmlFor="block-input">Block height or hash</label>
-        <div className="lookup-fields">
+      <form onSubmit={handleSubmit} className="dh-field mb-4">
+        <label className="dh-field__label" htmlFor="block-input">Block height or hash</label>
+        <div className="dh-inline-form">
           <select aria-label="Find block by"
             value={searchType}
             onChange={(e) => setSearchType(e.target.value as 'height' | 'hash')}
-            className="border border-gray-300 rounded px-2 py-1.5 text-sm bg-white"
+            className="dh-select"
           >
             <option value="height">By height</option>
             <option value="hash">By hash</option>
           </select>
           <input
-            id="block-input" required pattern={searchType === 'height' ? '[0-9]+' : '[0-9a-fA-F]{64}'}
+            id="block-input" aria-describedby="block-input-help" required pattern={searchType === 'height' ? '[0-9]+' : '[0-9a-fA-F]{64}'}
             type="text"
             value={searchValue}
             onChange={(e) => setSearchValue(e.target.value)}
             placeholder={searchType === 'height' ? 'Block height (e.g., 1000)' : 'Block hash'}
-            className="flex-1 border border-gray-300 rounded px-3 py-1.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand"
+            className="dh-input dh-input--mono flex-1"
           />
           <button
             type="submit"
-            className="lookup-button px-4 py-1.5 rounded text-sm transition-colors"
+            className="dh-btn dh-btn--primary"
           >
             Fetch block
           </button>
         </div>
+        <p className="dh-field__help" id="block-input-help">Use a block height or a 64-character hexadecimal hash.</p>
       </form>
 
       {isLoading && <Reading subject="the block" />}
@@ -77,10 +78,10 @@ export function BlockExplorer() {
 
       {data && (
         <div className="space-y-3">
-          {data.height && <Stat label="Height" value={data.height} />}
-          {data.hash && <Stat label="Hash" value={data.hash} mono />}
+          {data.height && <dl className="dh-stats"><Stat label="Height" value={data.height} /></dl>}
+          {data.hash && <dl className="dh-stats"><Stat label="Hash" value={data.hash} mono /></dl>}
           <div>
-            <dt className="text-xs text-gray-500 mb-2">Raw block data (hex)</dt>
+            <p className="text-xs text-gray-500 mb-2">Raw block data (hex)</p>
             <pre className="bg-gray-50 rounded p-3 text-xs font-mono overflow-auto max-h-48 break-all">
               {data.raw}
             </pre>

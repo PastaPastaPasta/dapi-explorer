@@ -30,41 +30,32 @@ export function PlatformStatus() {
       {s && (
         <div className="space-y-6">
           <div>
-            <h4 className="text-sm font-medium text-gray-700 mb-3">Version info</h4>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <h3 className="dh-h3 mb-3">Version info</h3>
+            <dl className="dh-stats grid grid-cols-2 md:grid-cols-3 gap-4">
               <Stat label="DAPI" value={String(software?.dapi ?? 'N/A')} />
               <Stat label="Drive" value={String(software?.drive ?? 'N/A')} />
-              <div className="col-span-2 md:col-span-3">
-                <Stat
-                  label="Tenderdash"
-                  value={String(software?.tenderdash ?? 'N/A')
-                    .split('+')[0]
-                    .replace(/-[0-9a-f]{7,}.*$/i, '')}
-                />
-                {software?.tenderdash ? (
-                  <details>
-                    <summary className="text-sm">Exact build identifier</summary>
-                    <p className="font-mono text-sm break-all my-2">
-                      {String(software.tenderdash)}
-                    </p>
-                    <dashhq-hash
-                      value={String(software.tenderdash)}
-                      label="Tenderdash build"
-                      full=""
-                    />
-                  </details>
-                ) : null}
-              </div>
               <Stat
                 label="Drive protocol"
                 value={String(s?.version.protocol.drive.current ?? 'N/A')}
               />
-            </div>
+            </dl>
+            <dl className="dh-kv mt-4">
+              <div>
+                <dt>Tenderdash</dt>
+                <dd>
+                  {String(software?.tenderdash ?? 'N/A').split('+')[0].replace(/-[0-9a-f]{7,}.*$/i, '')}
+                  {software?.tenderdash ? <details>
+                    <summary>Exact build identifier</summary>
+                    <dashhq-hash value={String(software.tenderdash)} label="Tenderdash build" full="" />
+                  </details> : null}
+                </dd>
+              </div>
+            </dl>
           </div>
 
           <div>
-            <h4 className="text-sm font-medium text-gray-700 mb-3">Chain info</h4>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <h3 className="dh-h3 mb-3">Chain info</h3>
+            <dl className="dh-stats grid grid-cols-2 md:grid-cols-3 gap-4">
               <Stat
                 label="Latest block height"
                 value={
@@ -108,12 +99,12 @@ export function PlatformStatus() {
                     : 'N/A'
                 }
               />
-            </div>
+            </dl>
           </div>
 
           <div>
-            <h4 className="text-sm font-medium text-gray-700 mb-3">Network info</h4>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <h3 className="dh-h3 mb-3">Network info</h3>
+            <dl className="dh-stats grid grid-cols-2 md:grid-cols-3 gap-4">
               <Stat label="Chain ID" value={String(network?.chain_id ?? 'N/A')} />
               <Stat label="Peers" value={String(network?.peers_count ?? 'N/A')} />
               <Stat
@@ -128,11 +119,11 @@ export function PlatformStatus() {
                   )
                 }
               />
-            </div>
+            </dl>
           </div>
 
           <div>
-            <h4 className="text-sm font-medium text-gray-700 mb-3">Node info</h4>
+            <h3 className="dh-h3 mb-3">Node info</h3>
             {creditsLoading && <Reading subject="total credits" />}
             {creditsError && (
               <ReadError
@@ -141,7 +132,7 @@ export function PlatformStatus() {
                 onRetry={() => void retryCredits()}
               />
             )}
-            <div className="grid grid-cols-2 gap-4">
+            <dl className="dh-stats grid grid-cols-2 gap-4">
               <Stat label="Node ID" value={node?.id ? truncateHash(node.id) : 'N/A'} mono />
               <Stat
                 label="ProTx hash"
@@ -164,7 +155,7 @@ export function PlatformStatus() {
                   value={formatCredits(credits.totalCreditsInPlatform)}
                 />
               )}
-            </div>
+            </dl>
           </div>
         </div>
       )}

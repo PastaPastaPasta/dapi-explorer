@@ -40,7 +40,7 @@ function App() {
         <div className="space-y-6">
           {identity ? (
             <>
-              <p className="handoff-note">
+              <p className="dh-notice dh-notice--info">
                 Identity response · {identity}. This read-only lookup uses the selected network.{' '}
                 <a href="#platform-diagnostics">Other Platform diagnostics ↓</a>
               </p>
