@@ -1,7 +1,21 @@
-export function formatTimestamp(timestamp: number | bigint | string, unit: 'seconds' | 'milliseconds' = 'seconds'): string {
+export function formatTimestamp(
+  timestamp: number | bigint | string,
+  unit: 'seconds' | 'milliseconds' = 'seconds',
+): string {
   const numeric = typeof timestamp !== 'string' || /^\d+$/.test(timestamp);
-  const date = new Date(numeric ? Number(timestamp) * (unit === 'seconds' ? 1000 : 1) : String(timestamp));
-  return Number.isNaN(date.getTime()) ? 'Unavailable' : date.toLocaleString();
+  const date = new Date(
+    numeric ? Number(timestamp) * (unit === 'seconds' ? 1000 : 1) : String(timestamp),
+  );
+  return Number.isNaN(date.getTime())
+    ? 'Unavailable'
+    : new Intl.DateTimeFormat('en-GB', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: 'UTC',
+      }).format(date) + ' UTC';
 }
 
 export function formatRelativeTime(timestamp: number | string): string {

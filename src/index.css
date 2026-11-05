@@ -52,3 +52,6 @@ tbody tr:hover { background: var(--dh-hover); }
   td[data-label]::before { content: attr(data-label); display: block; font: 12px var(--dh-font); color: var(--dh-ink-2); margin-bottom: 4px; }
 }
 @media (prefers-reduced-motion: reduce) { .spinner, .animate-spin, .animate-ping { animation: none; } }
+
+.handoff-note { overflow-wrap: anywhere; padding: 16px; border-left: 3px solid var(--dh-brand); background: var(--dh-surface); }
+#platform-diagnostics > summary { cursor: pointer; padding: 14px 0; color: var(--dh-brand-ink); }

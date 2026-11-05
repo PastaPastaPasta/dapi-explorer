@@ -18,12 +18,12 @@ const tabs = [
 ];
 
 function App() {
-  const [tab, setTab] = useUrlParam('tab', 'dashboard');
-  const activeTab = tabs.some(item => item.id === tab) ? tab : 'dashboard';
-  const setActiveTab = (value: string) => setTab(value === 'dashboard' ? '' : value);
+  const [identity] = useUrlParam('identity');
+  const [tab, setTab] = useUrlParam('tab', identity ? 'platform' : 'dashboard');
+  const activeTab = tabs.some((item) => item.id === tab) ? tab : 'dashboard';
 
   return (
-    <Layout tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab}>
+    <Layout tabs={tabs} activeTab={activeTab} onTabChange={setTab}>
       {activeTab === 'dashboard' && <Dashboard />}
 
       {activeTab === 'core' && (
@@ -38,12 +38,32 @@ function App() {
 
       {activeTab === 'platform' && (
         <div className="space-y-6">
-          <PlatformStatus />
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <IdentityLookup />
-            <DataContractViewer />
-          </div>
-          <EpochInfo />
+          {identity ? (
+            <>
+              <p className="handoff-note">
+                Identity response · {identity}. This read-only lookup uses the selected network.{' '}
+                <a href="#platform-diagnostics">Other Platform diagnostics ↓</a>
+              </p>
+              <IdentityLookup />
+              <details id="platform-diagnostics">
+                <summary>Platform status, contracts and epochs</summary>
+                <div className="space-y-6">
+                  <PlatformStatus />
+                  <DataContractViewer />
+                  <EpochInfo />
+                </div>
+              </details>
+            </>
+          ) : (
+            <>
+              <PlatformStatus />
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <IdentityLookup />
+                <DataContractViewer />
+              </div>
+              <EpochInfo />
+            </>
+          )}
         </div>
       )}
 

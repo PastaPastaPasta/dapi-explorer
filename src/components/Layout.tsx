@@ -30,8 +30,7 @@ export function Layout({ children, tabs, activeTab, onTabChange }: LayoutProps) 
       <nav slot="nav" aria-label="DAPI console">
         {tabs.map(tab => {
           const url = new URL(window.location.href);
-          if (tab.id === 'dashboard') url.searchParams.delete('tab');
-          else url.searchParams.set('tab', tab.id);
+          url.searchParams.set('tab', tab.id);
           return <a key={tab.id} href={url.pathname + url.search} aria-current={activeTab === tab.id ? 'page' : undefined}
             onClick={event => { if (!event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey && event.button === 0) { event.preventDefault(); onTabChange(tab.id); } }}>{tab.label}</a>;
         })}
