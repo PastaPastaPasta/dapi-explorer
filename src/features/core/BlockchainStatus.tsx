@@ -29,7 +29,7 @@ export function BlockchainStatus() {
             label="Synced"
             value={
               status.chain?.syncProgress !== undefined ? (
-                <span className={status.chain.syncProgress >= 1 ? 'text-green-600' : 'text-yellow-600'}>
+                <span className="text-gray-700">
                   {formatPercent(status.chain.syncProgress)}
                 </span>
               ) : 'N/A'

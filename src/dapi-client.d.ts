@@ -1,4 +1,11 @@
 declare module '@dashevo/dapi-client' {
+  interface BlockHeaderStream {
+    on(event: 'data', handler: (response: { getBlockHeaders(): { getHeadersList_asU8(): Uint8Array[] } | undefined; getChainLock_asU8(): Uint8Array }) => void): void;
+    on(event: 'error', handler: (error: Error) => void): void;
+    on(event: 'end', handler: () => void): void;
+    cancel(): void;
+  }
+
   interface BlockchainStatus {
     version: {
       protocol: number;
@@ -127,7 +134,7 @@ declare module '@dashevo/dapi-client' {
       subscribeToBlockHeadersWithChainLocks(opts?: {
         fromBlockHeight?: number;
         count?: number;
-      }): Promise<AsyncIterable<unknown>>;
+      }): Promise<BlockHeaderStream>;
     };
     platform: {
       getStatus(): Promise<PlatformStatus>;
@@ -161,6 +168,7 @@ declare module '@dashevo/dapi-client' {
 
   export default DAPIClient;
   export {
+    BlockHeaderStream,
     BlockchainStatus,
     Transaction,
     MasternodeStatus,

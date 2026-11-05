@@ -5,6 +5,7 @@ import { useDapi } from '../../hooks/useDapi';
 import { useNetworkStore } from '../../store/network';
 import { useBestBlockHeight } from '../../hooks/useBlockchainStatus';
 import { formatRelativeTime } from '../../lib/format';
+import type { BlockHeaderStream } from '@dashevo/dapi-client';
 
 interface BlockHeader {
   height: number;
@@ -17,92 +18,80 @@ export function BlockStream() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [blocks, setBlocks] = useState<BlockHeader[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const streamRef = useRef<AsyncIterable<unknown> | null>(null);
-  const abortRef = useRef(false);
+  const streamRef = useRef<BlockHeaderStream | null>(null);
+  const generation = useRef(0);
 
   const client = useDapi();
   const network = useNetworkStore((s) => s.network);
   const { data: currentHeight } = useBestBlockHeight();
 
   const stopStream = useCallback(() => {
-    abortRef.current = true;
-    setIsStreaming(false);
+    generation.current++;
+    const stream = streamRef.current;
     streamRef.current = null;
+    stream?.cancel();
+    setIsStreaming(false);
   }, []);
 
   const startStream = useCallback(async () => {
     if (!currentHeight) return;
-
+    const run = ++generation.current;
     setError(null);
     setIsStreaming(true);
-    abortRef.current = false;
+    let nextHeight = Math.max(1, currentHeight - 5);
+    let chainLockHeight = 0;
+    const fail = (err: Error) => {
+      if (generation.current !== run) return;
+      setError(err.message);
+      stopStream();
+    };
 
     try {
-      const fromHeight = Math.max(1, currentHeight - 5);
-      const stream = await client.core.subscribeToBlockHeadersWithChainLocks({
-        fromBlockHeight: fromHeight,
-        count: 0,
-      });
-
+      const stream = await client.core.subscribeToBlockHeadersWithChainLocks({ fromBlockHeight: nextHeight, count: 0 });
+      if (generation.current !== run) { stream.cancel(); return; }
       streamRef.current = stream;
-
-      for await (const response of stream) {
-        if (abortRef.current) break;
-
-        const res = response as {
-          blockHeaders?: Array<{
-            hash: Uint8Array;
-            height: number;
-            timestamp: number;
-          }>;
-          chainLock?: { height: number };
-        };
-
-        if (res.blockHeaders) {
-          const newBlocks = res.blockHeaders.map((header) => ({
-            height: header.height,
-            hash: Array.from(header.hash)
-              .map((b) => b.toString(16).padStart(2, '0'))
-              .join(''),
-            timestamp: header.timestamp,
-            chainLocked: res.chainLock ? res.chainLock.height >= header.height : false,
-          }));
-
-          setBlocks((prev) => {
-            const combined = [...newBlocks, ...prev];
-            const unique = combined.filter(
-              (block, index, self) =>
-                index === self.findIndex((b) => b.height === block.height)
-            );
-            return unique.sort((a, b) => b.height - a.height).slice(0, 20);
-          });
+      stream.on('error', fail);
+      stream.on('end', () => { if (generation.current === run) stopStream(); });
+      stream.on('data', (response) => {
+        if (generation.current !== run) return;
+        const lock = response.getChainLock_asU8();
+        if (lock.length >= 4) {
+          chainLockHeight = Math.max(chainLockHeight, new DataView(lock.buffer, lock.byteOffset, lock.byteLength).getUint32(0, true));
+          setBlocks(previous => previous.map(block => ({ ...block, chainLocked: block.chainLocked || block.height <= chainLockHeight })));
         }
-      }
-    } catch (err) {
-      if (!abortRef.current) {
-        setError((err as Error).message);
-        setIsStreaming(false);
-      }
-    }
-  }, [client, currentHeight]);
+        const headers = response.getBlockHeaders()?.getHeadersList_asU8() ?? [];
+        const firstHeight = nextHeight;
+        nextHeight += headers.length;
+        void Promise.all(headers.map(async (header, index) => {
+          if (header.length < 80) throw new Error('The node returned an incomplete block header.');
+          const height = firstHeight + index;
+          const hash = await client.core.getBlockHash(height);
+          const timestamp = new DataView(header.buffer, header.byteOffset, header.byteLength).getUint32(68, true);
+          return { height, hash, timestamp, chainLocked: height <= chainLockHeight };
+        })).then(batch => {
+          if (generation.current !== run) return;
+          setBlocks(previous => [...batch, ...previous].filter((block, index, all) => index === all.findIndex(other => other.height === block.height)).sort((a, b) => b.height - a.height).slice(0, 20));
+        }).catch(fail);
+      });
+    } catch (err) { fail(err instanceof Error ? err : new Error(String(err))); }
+  }, [client, currentHeight, stopStream]);
 
   useEffect(() => {
-    return () => {
-      stopStream();
-      setBlocks([]);
-    };
+    setBlocks([]);
+    return stopStream;
   }, [network, stopStream]);
 
   return (
     <Card title="Live block stream">
       <div className="space-y-4">
+        <p className="text-sm text-gray-500">Block hashes and ChainLock status are reported by the node. They are not proof-verified here.</p>
         <div className="flex items-center gap-3">
           <button
             onClick={isStreaming ? stopStream : startStream}
             disabled={!currentHeight}
             className="lookup-button px-4 py-1.5 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isStreaming ? 'Stop' : 'Start'} Stream
+            {isStreaming ? 'Stop' : 'Start'} stream
           </button>
           {isStreaming && (
             <span className="flex items-center gap-2 text-sm text-green-600">
@@ -158,7 +147,7 @@ export function BlockStream() {
         )}
 
         {blocks.length === 0 && !isStreaming && (
-          <p className="text-gray-500 text-sm">Click Start Stream to receive real-time block headers.</p>
+          <p className="text-gray-500 text-sm">Start the stream to receive real-time block headers.</p>
         )}
       </div>
     </Card>
