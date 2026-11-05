@@ -36,11 +36,12 @@ interface StatProps {
 }
 
 export function Stat({ label, value, mono }: StatProps) {
+  const missing = value === undefined || value === null || value === '' || value === 'N/A';
   return (
     <div className="dh-stat min-w-0">
       <dt className="dh-stat__label">{label}</dt>
-      <dd className={`dh-stat__value ${mono ? 'stat-text font-mono' : 'stat-number'}`}>
-        {value}
+      <dd className={`dh-stat__value ${mono || missing || (typeof value === 'string' && value.startsWith('—')) ? 'stat-text' : 'stat-number'} ${mono ? 'font-mono' : ''}`}>
+        {missing ? '— · Not reported by this node' : typeof value === 'boolean' ? String(value) : value}
       </dd>
     </div>
   );

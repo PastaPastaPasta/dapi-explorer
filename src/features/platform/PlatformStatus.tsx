@@ -1,11 +1,14 @@
 import { useNetworkStore } from '../../store/network';
+import { BalanceStat } from '../../components/BalanceStat';
+import { HashValue } from '../../components/HashValue';
 import { Card, Stat } from '../../components/Card';
 import { Reading, ReadError } from '../../components/ReadState';
 import { usePlatformStatus, useTotalCredits } from '../../hooks/usePlatformStatus';
-import { formatNumber, formatDash, truncateHash } from '../../lib/format';
+import { formatNumber, truncateHash } from '../../lib/format';
 
 export function PlatformStatus() {
-  const unit = useNetworkStore(s => s.network) === 'testnet' ? 'tDASH' : 'DASH';
+  const selectedNetwork = useNetworkStore(s => s.network);
+  const unit = selectedNetwork === 'testnet' ? 'tDASH' : 'DASH';
   const { data: status, isLoading, error, refetch, dataUpdatedAt } = usePlatformStatus();
   const {
     data: credits,
@@ -15,7 +18,8 @@ export function PlatformStatus() {
   } = useTotalCredits();
 
   const s = status;
-  const software = s?.version.software;
+  const software = s?.version?.software;
+  const proTxHash = s?.toJSON()?.node?.proTxHash;
   const chain = s?.chain;
   const network = s?.network;
   const time = s?.time;
@@ -23,12 +27,12 @@ export function PlatformStatus() {
 
   return (
     <Card title="Platform status" loading={isLoading} error={error} onRetry={() => void refetch()}>
-      {s && (
-        <p className="text-xs text-gray-500 mb-4">
-          Reported by Platform · read at {new Date(dataUpdatedAt).toISOString().slice(11, 19)} UTC ·
-          SDK 5.0.0-rc.8. Node ProTx hash below identifies the responding node.
-        </p>
-      )}
+      {s && <div className="dh-notice dh-notice--info mb-4">
+        <p>This is one Platform node’s response, not network-wide health.</p>
+        <p>Responding node: <HashValue value={proTxHash} label="Responding ProTx hash" href={proTxHash ? window.dashhq.href('nodes', `/mn/${proTxHash}`, { network: selectedNetwork }) : undefined} /></p>
+        <p><a href={window.dashhq.href('nodes', '/', { network: selectedNetwork })}>See network-wide health in Radar →</a></p>
+        <p className="text-xs text-gray-500 mt-2">Read at {new Date(dataUpdatedAt).toISOString().slice(11, 19)} UTC · SDK 5.0.0-rc.8</p>
+      </div>}
       {s && (
         <div className="space-y-6">
           <div>
@@ -38,7 +42,7 @@ export function PlatformStatus() {
               <Stat label="Drive" value={String(software?.drive ?? 'N/A')} mono />
               <Stat
                 label="Drive protocol"
-                value={String(s?.version.protocol.drive.current ?? 'N/A')}
+                value={String(s?.version?.protocol?.drive?.current ?? 'N/A')}
               />
             </dl>
             <dl className="dh-kv mt-4">
@@ -47,8 +51,8 @@ export function PlatformStatus() {
                 <dd>
                   {software?.tenderdash ? <details>
                     <summary>Exact software build</summary>
-                    <dashhq-hash value={String(software.tenderdash)} label="Tenderdash build" full="" />
-                  </details> : null}
+                    <HashValue value={String(software.tenderdash)} label="Tenderdash build" full />
+                  </details> : <span>— · Not reported by this node</span>}
                 </dd>
               </div>
             </dl>
@@ -139,10 +143,7 @@ export function PlatformStatus() {
                 label="ProTx hash"
                 value={
                   node?.proTxHash ? (
-                    <dashhq-hash
-                      value={String(s?.toJSON()?.node?.proTxHash ?? '')}
-                      label="Node ProTx hash"
-                    />
+                    <HashValue value={proTxHash} label="Node ProTx hash" />
                   ) : (
                     'N/A'
                   )
@@ -150,12 +151,7 @@ export function PlatformStatus() {
                 mono
               />
               <Stat label="Current epoch" value={String(time?.epoch ?? 'N/A')} />
-              {credits?.totalCreditsInPlatform !== undefined && (
-                <Stat
-                  label="Platform balance · DASH equivalent"
-                  value={<><span className="stat-amount">{formatDash(credits.totalCreditsInPlatform)}</span><span className="stat-unit">{unit}</span><small className="stat-exact"><dashhq-hash value={String(credits.totalCreditsInPlatform)} label="Exact Platform credits" full="" /> credits</small></>}
-                />
-              )}
+              {!creditsLoading && !creditsError && <BalanceStat label="Platform balance · DASH equivalent" credits={credits?.totalCreditsInPlatform} unit={unit} />}
             </dl>
           </div>
         </div>

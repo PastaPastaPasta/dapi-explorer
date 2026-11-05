@@ -1,3 +1,4 @@
+import { HashValue } from '../../components/HashValue';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { ReadError, Reading } from '../../components/ReadState';
 import { Card } from '../../components/Card';
@@ -123,7 +124,7 @@ export function BlockStream() {
                   <tr key={block.height} className="hover:bg-gray-50">
                     <td data-label="Height" className="dh-rc-title">{block.height}</td>
                     <td data-label="Hash" className="px-3 py-2 font-mono text-xs">
-                      <dashhq-hash value={block.hash} label="Block hash" />
+                      <HashValue value={block.hash} label="Block hash" />
                     </td>
                     <td data-label="Time" className="px-3 py-2 text-gray-600">
                       {formatRelativeTime(block.timestamp)}

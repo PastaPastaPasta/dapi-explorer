@@ -16,6 +16,9 @@ summary { cursor: pointer; color: var(--dh-brand-ink); }
 .console-tabs a { padding-block: 12px; min-height: 44px; }
 .dh-stat__value.stat-text { font-size: 14px; font-weight: 400; line-height: 1.5; overflow-wrap: anywhere; }
 .stat-number { font-size: clamp(19px, 2.1vw, 26px); }
-.stat-amount { display: inline-block; white-space: nowrap; font-variant-numeric: tabular-nums; }
-.stat-unit { display: block; font-size: 13px; font-weight: 400; color: var(--dh-ink-2); }
+.stat-amount { display: inline-block; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.stat-unit { display: inline; font-size: 13px; font-weight: 400; color: var(--dh-ink-2); }
 .stat-exact { display: block; margin-top: 8px; font-size: 12px; font-weight: 400; line-height: 1.6; color: var(--dh-ink-2); }
+
+#root { min-height: 100vh; display: flex; flex-direction: column; }
+#main { flex: 1; }

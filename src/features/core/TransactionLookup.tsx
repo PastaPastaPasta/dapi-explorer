@@ -2,6 +2,7 @@ import { useState, useEffect, type FormEvent } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useUrlParam } from '../../lib/location';
 import { ReadError, Reading } from '../../components/ReadState';
+import { HashValue } from '../../components/HashValue';
 import { Card, Stat } from '../../components/Card';
 import { useDapi } from '../../hooks/useDapi';
 import { useNetworkStore } from '../../store/network';
@@ -68,7 +69,7 @@ export function TransactionLookup() {
             <Stat label="Confirmations" value={data.confirmations} />
             <Stat
               label="Block hash"
-              value={<dashhq-hash value={bytesToHex(data.blockHash)} label="Block hash" />}
+              value={<HashValue value={data.blockHash ? bytesToHex(data.blockHash) : undefined} label="Block hash" />}
               mono
             />
             <Stat

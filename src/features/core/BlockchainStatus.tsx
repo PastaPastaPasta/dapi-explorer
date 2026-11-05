@@ -1,3 +1,4 @@
+import { HashValue } from '../../components/HashValue';
 import { Card, Stat } from '../../components/Card';
 import { JsonView } from '../../components/JsonView';
 import { useBlockchainStatus, useBestBlockHeight, useBestBlockHash } from '../../hooks/useBlockchainStatus';
@@ -37,12 +38,12 @@ export function BlockchainStatus() {
               ) : 'N/A'
             }
           />
-          <Stat label="Block height" value={formatNumber(height ?? status.chain?.blocksCount ?? 0)} />
-          <Stat label="Headers" value={formatNumber(status.chain?.headersCount ?? 0)} />
+          <Stat label="Block height" value={height !== undefined || status.chain?.blocksCount !== undefined ? formatNumber(height ?? status.chain!.blocksCount!) : 'N/A'} />
+          <Stat label="Headers" value={status.chain?.headersCount !== undefined ? formatNumber(status.chain.headersCount) : 'N/A'} />
           <Stat label="Peers" value={status.network?.peersCount ?? 'N/A'} />
           <Stat
             label="Best block hash"
-            value={<dashhq-hash value={hash ?? status.chain?.bestBlockHash ?? ''} label="Best block hash" />}
+            value={<HashValue value={hash ?? status.chain?.bestBlockHash} label="Best block hash" />}
             mono
           />
           <Stat label="Protocol version" value={status.version?.protocol ?? 'N/A'} />

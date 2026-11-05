@@ -66,3 +66,10 @@ export function formatDash(credits: bigint | number | string): string {
   const fraction = (value % 100_000_000_000n).toString().padStart(11, '0').slice(0, 8).replace(/0+$/, '');
   return `${whole.toLocaleString('en-US')}${fraction ? '.' + fraction : ''}`;
 }
+
+export function creditValue(value: unknown): bigint | null {
+  if (typeof value !== 'bigint' && typeof value !== 'number' && typeof value !== 'string') return null;
+  if (typeof value === 'number' && !Number.isSafeInteger(value)) return null;
+  if (typeof value === 'string' && !/^\d+$/.test(value)) return null;
+  try { const parsed = BigInt(value); return parsed >= 0n ? parsed : null; } catch { return null; }
+}
