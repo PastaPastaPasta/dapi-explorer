@@ -1,9 +1,11 @@
+import { useNetworkStore } from '../../store/network';
 import { Card, Stat } from '../../components/Card';
 import { Reading, ReadError } from '../../components/ReadState';
 import { usePlatformStatus, useTotalCredits } from '../../hooks/usePlatformStatus';
-import { formatNumber, formatCredits, truncateHash } from '../../lib/format';
+import { formatNumber, formatDash, truncateHash } from '../../lib/format';
 
 export function PlatformStatus() {
+  const unit = useNetworkStore(s => s.network) === 'testnet' ? 'tDASH' : 'DASH';
   const { data: status, isLoading, error, refetch, dataUpdatedAt } = usePlatformStatus();
   const {
     data: credits,
@@ -32,8 +34,8 @@ export function PlatformStatus() {
           <div>
             <h3 className="dh-h3 mb-3">Version info</h3>
             <dl className="dh-stats grid grid-cols-2 md:grid-cols-3 gap-4">
-              <Stat label="DAPI" value={String(software?.dapi ?? 'N/A')} />
-              <Stat label="Drive" value={String(software?.drive ?? 'N/A')} />
+              <Stat label="DAPI" value={String(software?.dapi ?? 'N/A')} mono />
+              <Stat label="Drive" value={String(software?.drive ?? 'N/A')} mono />
               <Stat
                 label="Drive protocol"
                 value={String(s?.version.protocol.drive.current ?? 'N/A')}
@@ -43,9 +45,8 @@ export function PlatformStatus() {
               <div>
                 <dt>Tenderdash</dt>
                 <dd>
-                  {String(software?.tenderdash ?? 'N/A').split('+')[0].replace(/-[0-9a-f]{7,}.*$/i, '')}
                   {software?.tenderdash ? <details>
-                    <summary>Exact build identifier</summary>
+                    <summary>Exact software build</summary>
                     <dashhq-hash value={String(software.tenderdash)} label="Tenderdash build" full="" />
                   </details> : null}
                 </dd>
@@ -105,7 +106,7 @@ export function PlatformStatus() {
           <div>
             <h3 className="dh-h3 mb-3">Network info</h3>
             <dl className="dh-stats grid grid-cols-2 md:grid-cols-3 gap-4">
-              <Stat label="Chain ID" value={String(network?.chain_id ?? 'N/A')} />
+              <Stat label="Chain ID" value={String(network?.chain_id ?? 'N/A')} mono />
               <Stat label="Peers" value={String(network?.peers_count ?? 'N/A')} />
               <Stat
                 label="Listening"
@@ -151,8 +152,8 @@ export function PlatformStatus() {
               <Stat label="Current epoch" value={String(time?.epoch ?? 'N/A')} />
               {credits?.totalCreditsInPlatform !== undefined && (
                 <Stat
-                  label="Total credits in Platform"
-                  value={formatCredits(credits.totalCreditsInPlatform)}
+                  label="Platform balance · DASH equivalent"
+                  value={<><span className="stat-amount">{formatDash(credits.totalCreditsInPlatform)}</span><span className="stat-unit">{unit}</span><small className="stat-exact"><dashhq-hash value={String(credits.totalCreditsInPlatform)} label="Exact Platform credits" full="" /> credits</small></>}
                 />
               )}
             </dl>

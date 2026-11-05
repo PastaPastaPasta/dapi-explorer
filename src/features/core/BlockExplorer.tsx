@@ -74,7 +74,7 @@ export function BlockExplorer() {
       </form>
 
       {isLoading && <Reading subject="the block" />}
-      {error && !isLoading && <ReadError error={error} subject="the block" />}
+      {error && !isLoading && <ReadError error={error} subject="the block" onRetry={() => void refetch()} />}
 
       {data && (
         <div className="space-y-3">

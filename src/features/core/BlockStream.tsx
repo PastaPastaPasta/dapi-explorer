@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { ReadError } from '../../components/ReadState';
+import { ReadError, Reading } from '../../components/ReadState';
 import { Card } from '../../components/Card';
 import { useDapi } from '../../hooks/useDapi';
 import { useNetworkStore } from '../../store/network';
@@ -23,7 +23,7 @@ export function BlockStream() {
 
   const client = useDapi();
   const network = useNetworkStore((s) => s.network);
-  const { data: currentHeight } = useBestBlockHeight();
+  const { data: currentHeight, isLoading: heightLoading, error: heightError, refetch: retryHeight } = useBestBlockHeight();
 
   const stopStream = useCallback(() => {
     generation.current++;
@@ -103,9 +103,9 @@ export function BlockStream() {
           )}
         </div>
 
-        {error && (
-          <ReadError error={new Error(error)} subject="the block stream" />
-        )}
+        {heightLoading && <Reading subject="the starting block height" />}
+        {heightError && <ReadError error={heightError} subject="the starting block height" onRetry={() => void retryHeight()} />}
+        {error && <ReadError error={new Error(error)} subject="the block stream" onRetry={() => void startStream()} />}
 
         {blocks.length > 0 && (
           <div className="border border-gray-200 rounded overflow-hidden">

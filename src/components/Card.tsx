@@ -39,7 +39,7 @@ export function Stat({ label, value, mono }: StatProps) {
   return (
     <div className="dh-stat min-w-0">
       <dt className="dh-stat__label">{label}</dt>
-      <dd className={`dh-stat__value [overflow-wrap:anywhere] ${mono ? 'font-mono text-sm font-normal break-all' : ''}`}>
+      <dd className={`dh-stat__value ${mono ? 'stat-text font-mono' : 'stat-number'}`}>
         {value}
       </dd>
     </div>

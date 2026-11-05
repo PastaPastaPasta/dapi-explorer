@@ -26,8 +26,22 @@ export function Layout({ children, tabs, activeTab, onTabChange }: LayoutProps) 
 
   return <>
     <a className="skip-link" href="#main">Skip to content</a>
-    <dashhq-bar ref={bar} product="dapi" network={network} networks="mainnet testnet" sticky="">
-      <nav slot="nav" aria-label="DAPI console">
+    <dashhq-bar ref={bar} product="explorer" product-href={window.dashhq.href('explorer', '/', { network })} network={network} networks="mainnet testnet" sticky="">
+      <nav slot="nav" aria-label="Explorer">
+        <a href={window.dashhq.href('explorer', '/identity/', { network })}>Identities</a>
+        <a href={window.dashhq.href('explorer', '/dpns/search/', { network })}>Names</a>
+        <a href={window.dashhq.href('explorer', '/contract/', { network })}>Contracts</a>
+        <a href={window.dashhq.href('explorer', '/tools/', { network })} aria-current="page">Tools</a>
+      </nav>
+    </dashhq-bar>
+    <main id="main" className="dh-container dh-page">
+      <p className="dh-crumbs"><a href={window.dashhq.href('explorer', '/tools/', { network })}>Explorer tools</a><span aria-hidden="true"> › </span>DAPI console</p>
+      <header className="dh-page-header">
+        <h1 className="dh-page-header__title">{activeTab === 'dashboard' ? 'Read a node’s status' : activeTab === 'core' ? 'Inspect Core data' : activeTab === 'platform' ? 'Look up Platform data' : 'Follow new Core blocks'}</h1>
+        <p className="dh-page-header__lede">{activeTab === 'dashboard' ? 'Check Core and Platform responses from a node, then inspect an identity, contract or block.' : activeTab === 'core' ? 'Find a block or transaction and inspect its response.' : activeTab === 'platform' ? 'Read an identity, contract or epoch from the selected network.' : 'Watch the latest block height as this node reports it.'}</p>
+        <p className="dh-field__help">DAPI console · Read-only diagnostic responses. <a href={window.dashhq.href('explorer', '/', { network })}>Explorer checks proofs.</a></p>
+      </header>
+      <nav className="dh-tabs console-tabs" aria-label="DAPI console sections">
         {tabs.map(tab => {
           const url = new URL(window.location.href);
           url.searchParams.set('tab', tab.id);
@@ -35,17 +49,10 @@ export function Layout({ children, tabs, activeTab, onTabChange }: LayoutProps) 
             onClick={event => { if (!event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey && event.button === 0) { event.preventDefault(); onTabChange(tab.id); } }}>{tab.label}</a>;
         })}
       </nav>
-    </dashhq-bar>
-    <main id="main" className="dh-container dh-page">
-      <header className="dh-page-header">
-
-        <h1 className="dh-page-header__title">DAPI console</h1>
-        <p className="dh-page-header__lede">Read Core and Platform directly from a node. Responses are diagnostic data. Open Explorer for proof verification details.</p>
-      </header>
       {children}
     </main>
     <dashhq-footer product="dapi" source="https://github.com/PastaPastaPasta/dapi-explorer">
-      <p>Public, read-only queries. <a href={window.dashhq.href('explorer', '/', { network })}>Open Explorer</a> · <a href={window.dashhq.href('fees', '/?network=' + network)}>Estimate contract fees</a></p>
+      <p>Public, read-only queries. <a href={window.dashhq.href('explorer', '/', { network })}>Open Explorer</a> · <a href={window.dashhq.href('explorer', '/tools/fees/', { network })}>Estimate contract fees</a></p>
     </dashhq-footer>
   </>;
 }

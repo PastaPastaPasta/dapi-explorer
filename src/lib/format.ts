@@ -59,3 +59,10 @@ export function formatBytes(bytes: number): string {
   if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
   return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
 }
+
+export function formatDash(credits: bigint | number | string): string {
+  const value = BigInt(credits);
+  const whole = value / 100_000_000_000n;
+  const fraction = (value % 100_000_000_000n).toString().padStart(11, '0').slice(0, 8).replace(/0+$/, '');
+  return `${whole.toLocaleString('en-US')}${fraction ? '.' + fraction : ''}`;
+}

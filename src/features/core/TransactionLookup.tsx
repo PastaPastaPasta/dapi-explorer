@@ -40,7 +40,7 @@ export function TransactionLookup() {
         <div className="dh-inline-form">
           <input
             id="tx-input" aria-describedby="tx-input-help"
-            required pattern="(?:0x)?[0-9a-fA-F]{64}"
+            required pattern="[0-9a-fA-F]{64}"
             title="Use a 32-byte ID: 64 hexadecimal characters."
             type="text"
             value={txid}
@@ -59,7 +59,7 @@ export function TransactionLookup() {
       </form>
 
       {isLoading && <Reading subject="the lookup result" />}
-      {error && !isLoading && <ReadError error={error} subject="the lookup result" />}
+      {error && !isLoading && <ReadError error={error} subject="the lookup result" onRetry={() => void refetch()} />}
 
       {data && (
         <div className="space-y-3">

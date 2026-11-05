@@ -41,7 +41,7 @@ function App() {
           {identity ? (
             <>
               <p className="dh-notice dh-notice--info">
-                Identity response · {identity}. This read-only lookup uses the selected network.{' '}
+                Opened from Explorer with your identity and network prefilled.{' '}
                 <a href="#platform-diagnostics">Other Platform diagnostics ↓</a>
               </p>
               <IdentityLookup />

@@ -12,3 +12,10 @@ summary { cursor: pointer; color: var(--dh-brand-ink); }
 .skip-link { position: fixed; left: 16px; top: -80px; padding: 10px; background: var(--dh-surface); z-index: 100; }
 .skip-link:focus { top: 8px; }
 #platform-diagnostics > summary { cursor: pointer; padding: 14px 0; color: var(--dh-brand-ink); }
+.console-tabs { margin-bottom: 24px; flex-wrap: wrap; }
+.console-tabs a { padding-block: 12px; min-height: 44px; }
+.dh-stat__value.stat-text { font-size: 14px; font-weight: 400; line-height: 1.5; overflow-wrap: anywhere; }
+.stat-number { font-size: clamp(19px, 2.1vw, 26px); }
+.stat-amount { display: inline-block; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.stat-unit { display: block; font-size: 13px; font-weight: 400; color: var(--dh-ink-2); }
+.stat-exact { display: block; margin-top: 8px; font-size: 12px; font-weight: 400; line-height: 1.6; color: var(--dh-ink-2); }

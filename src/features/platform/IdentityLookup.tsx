@@ -6,6 +6,7 @@ import { Card, Stat } from '../../components/Card';
 import { JsonView } from '../../components/JsonView';
 import { platformRead } from '../../lib/platform';
 import { useNetworkStore } from '../../store/network';
+import { formatDash } from '../../lib/format';
 import { identifierToBytes, identifierToBase58 } from '../../lib/identifier';
 
 export function IdentityLookup() {
@@ -75,10 +76,10 @@ export function IdentityLookup() {
         <div className="space-y-4">
           {data.balance ? (
             <dl className="dh-stats"><Stat
-              label="Credit balance"
-              value={`${Number(data.balance.balance ?? 0n).toLocaleString()} credits`}
+              label="Balance · DASH equivalent"
+              value={<><span className="stat-amount">{formatDash(data.balance.balance ?? 0n)}</span><span className="stat-unit">{network === 'testnet' ? 'tDASH' : 'DASH'}</span><small className="stat-exact"><dashhq-hash value={String(data.balance.balance ?? 0n)} label="Exact credit balance" full="" /> credits</small></>}
             /></dl>
-          ) : null}
+          ) : <p className="dh-notice dh-notice--info">The identity loaded, but its balance is unavailable. <button className="dh-btn" onClick={() => void refetch()}>Retry balance</button></p>}
           <div>
             <p className="text-xs text-gray-500 mb-2">Identity data</p>
             <JsonView data={data.identity} />

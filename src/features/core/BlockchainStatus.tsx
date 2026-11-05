@@ -22,10 +22,10 @@ export function BlockchainStatus() {
         </div>
       )}
       {status && <p className="text-xs text-gray-500 mb-4">Reported by a Core node; refreshed every 10 seconds.</p>}
-      {status?.status === 'ERROR' && <p className="text-sm text-yellow-600 mb-4">The node answered, but reports a health error. Sync progress alone does not indicate node health.</p>}
+      {status?.status === 'ERROR' && <p className="dh-notice dh-notice--warn mb-4">The node answered but reports a local health problem. This is one node’s response, not a network-wide outage. Try refreshing its status; other lookups remain available.</p>}
       {status && hasExpectedStructure && (
         <dl className="dh-stats grid grid-cols-2 md:grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-4">
-          <Stat label="Chain" value={status.chain?.name ?? 'N/A'} />
+          <Stat label="Chain" value={status.chain?.name ?? 'N/A'} mono />
           <Stat label="Node health" value={<span className={`dh-status dh-status--${health.tone}`}>{health.label}</span>} />
           <Stat
             label="Synced"
@@ -46,8 +46,8 @@ export function BlockchainStatus() {
             mono
           />
           <Stat label="Protocol version" value={status.version?.protocol ?? 'N/A'} />
-          <Stat label="Agent" value={status.version?.agent ?? 'N/A'} />
-          <Stat label="Difficulty" value={status.chain?.difficulty ? formatNumber(Math.round(status.chain.difficulty)) : 'N/A'} />
+          <Stat label="Agent" value={status.version?.agent ?? 'N/A'} mono />
+          <Stat label="Difficulty" value={status.chain?.difficulty !== undefined ? status.chain.difficulty.toLocaleString('en-US', { maximumSignificantDigits: 5 }) : 'N/A'} />
         </dl>
       )}
       {status && <details className="mt-4 text-sm"><summary>Raw node response</summary><JsonView data={status} /></details>}
