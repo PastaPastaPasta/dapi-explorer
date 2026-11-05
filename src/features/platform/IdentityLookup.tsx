@@ -60,10 +60,7 @@ export function IdentityLookup() {
             Look up identity
           </button>
         </div>
-        <p className="text-xs text-gray-500">
-          Paste the same base58 identity ID used in Explorer, or a 32-byte hex ID.
-        </p>
-        <p className="dh-field__help" id="identity-input-help">Use a base58 identity ID or its hexadecimal representation.</p>
+        <p className="dh-field__help" id="identity-input-help">Paste the base58 identity ID used in Explorer, or its 64-character hexadecimal representation.</p>
       </form>
 
       {isLoading && <Reading subject="the lookup result" />}
