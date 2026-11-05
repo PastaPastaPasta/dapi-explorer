@@ -39,14 +39,14 @@ export function Layout({ children, tabs, activeTab, onTabChange }: LayoutProps) 
     </dashhq-bar>
     <main id="main" className="app-main">
       <div className="page-intro">
-        <p className="tool-links"><a href={window.dashhq.href('explorer', '/', { network })}>Explorer</a><span>/</span><span>Tools</span><a href={window.dashhq.href('fees')}>Fee estimator →</a></p>
+        <p className="tool-links"><a href={window.dashhq.href('explorer', '/', { network })}>Explorer</a><span>/</span><span>Tools</span><a href={window.dashhq.href('fees', '/?network=' + network)}>Fee estimator →</a></p>
         <h1>DAPI console</h1>
-        <p>Read Core and Platform directly from a node. Responses are reported data; this console does not verify proofs.</p>
+        <p>Read Core and Platform directly from a node. Responses are diagnostic data. Open Explorer for proof verification details.</p>
       </div>
       {children}
     </main>
     <dashhq-footer product="dapi" source="https://github.com/PastaPastaPasta/dapi-explorer">
-      <p>Public, read-only queries. <a href={window.dashhq.href('explorer', '/', { network })}>Open Explorer</a> · <a href={window.dashhq.href('fees')}>Estimate contract fees</a></p>
+      <p>Public, read-only queries. <a href={window.dashhq.href('explorer', '/', { network })}>Open Explorer</a> · <a href={window.dashhq.href('fees', '/?network=' + network)}>Estimate contract fees</a></p>
     </dashhq-footer>
   </>;
 }

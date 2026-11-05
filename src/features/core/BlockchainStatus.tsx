@@ -2,17 +2,19 @@ import { Card, Stat } from '../../components/Card';
 import { JsonView } from '../../components/JsonView';
 import { useBlockchainStatus, useBestBlockHeight, useBestBlockHash } from '../../hooks/useBlockchainStatus';
 import { formatNumber, formatPercent } from '../../lib/format';
+import { coreHealth } from '../../lib/request';
 
 export function BlockchainStatus() {
-  const { data: status, isLoading, error } = useBlockchainStatus();
+  const { data: status, isLoading, error, refetch } = useBlockchainStatus();
   const { data: height } = useBestBlockHeight();
   const { data: hash } = useBestBlockHash();
 
   // Check if response has expected structure
   const hasExpectedStructure = status?.chain?.name !== undefined;
+  const health = coreHealth(status?.status);
 
   return (
-    <Card title="Core status" loading={isLoading} error={error}>
+    <Card title="Core status" loading={isLoading} error={error} onRetry={() => void refetch()}>
       {status && !hasExpectedStructure && (
         <div>
           <p className="text-sm text-gray-500 mb-2">Raw response (unexpected format):</p>
@@ -24,7 +26,7 @@ export function BlockchainStatus() {
       {status && hasExpectedStructure && (
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           <Stat label="Chain" value={status.chain?.name ?? 'N/A'} />
-          <Stat label="Node response" value={<span className="text-green-600">Reachable</span>} />
+          <Stat label="Node health" value={<span className={health.className}>{health.label}</span>} />
           <Stat
             label="Synced"
             value={

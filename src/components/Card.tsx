@@ -7,9 +7,10 @@ interface CardProps {
   className?: string;
   loading?: boolean;
   error?: Error | null;
+  onRetry?: () => void;
 }
 
-export function Card({ title, children, className = '', loading, error }: CardProps) {
+export function Card({ title, children, className = '', loading, error, onRetry }: CardProps) {
   return (
     <div className={`panel bg-white rounded-lg border border-gray-200 ${className}`}>
       <div className="px-4 py-3 border-b border-gray-100">
@@ -19,7 +20,7 @@ export function Card({ title, children, className = '', loading, error }: CardPr
         {loading ? (
           <Reading subject={title.toLowerCase()} />
         ) : error ? (
-          <ReadError error={error} subject={title.toLowerCase()} />
+          <ReadError error={error} subject={title.toLowerCase()} onRetry={onRetry} />
         ) : (
           children
         )}

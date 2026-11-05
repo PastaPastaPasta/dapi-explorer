@@ -5,8 +5,8 @@ import { useEpochsInfo, useConsensusParams } from '../../hooks/usePlatformStatus
 import { formatNumber, formatTimestamp, formatBytes } from '../../lib/format';
 
 export function EpochInfo() {
-  const { data: epochsData, isLoading: epochsLoading, error: epochsError } = useEpochsInfo(0, 10);
-  const { data: consensusParams, isLoading: paramsLoading, error: paramsError } = useConsensusParams();
+  const { data: epochsData, isLoading: epochsLoading, error: epochsError, refetch: retryEpochs } = useEpochsInfo(0, 10);
+  const { data: consensusParams, isFetching: paramsLoading, error: paramsError, refetch: retryParams } = useConsensusParams(false);
 
 
   // Check if consensus params have expected structure
@@ -15,10 +15,12 @@ export function EpochInfo() {
   return (
     <Card title="Epochs and consensus">
       <div className="space-y-6">
+        <p className="text-sm text-gray-500">Current nodes expose consensus version and sync state in Platform status. The legacy consensus-parameters endpoint may be unavailable.</p>
+        <button className="lookup-button" disabled={paramsLoading} onClick={() => void retryParams()}>Read legacy consensus parameters</button>
         {epochsLoading && <Reading subject="epochs" />}
-        {epochsError && <ReadError error={epochsError} subject="epochs" />}
+        {epochsError && <ReadError error={epochsError} subject="epochs" onRetry={() => void retryEpochs()} />}
         {paramsLoading && <Reading subject="consensus parameters" />}
-        {paramsError && <ReadError error={paramsError} subject="consensus parameters" />}
+        {paramsError && <ReadError error={paramsError} subject="consensus parameters" onRetry={() => void retryParams()} />}
         {consensusParams && !hasConsensusStructure && (
           <div>
             <p className="text-sm text-gray-500 mb-2">Consensus params (raw):</p>
@@ -67,8 +69,8 @@ export function EpochInfo() {
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {epochsData.epochsInfo.map((epoch, idx) => (
-                    <tr key={epoch?.number ?? idx} className="hover:bg-gray-50">
-                      <td data-label="Epoch" className="px-3 py-2 font-mono">{epoch?.number ?? 'N/A'}</td>
+                    <tr key={epoch?.index ?? idx} className="hover:bg-gray-50">
+                      <td data-label="Epoch" className="px-3 py-2 font-mono">{epoch?.index ?? 'N/A'}</td>
                       <td data-label="Start block" className="px-3 py-2 font-mono text-xs">
                         {epoch?.firstBlockHeight ? formatNumber(epoch.firstBlockHeight) : 'N/A'}
                       </td>
@@ -76,7 +78,7 @@ export function EpochInfo() {
                         {epoch?.firstCoreBlockHeight ? formatNumber(epoch.firstCoreBlockHeight) : 'N/A'}
                       </td>
                       <td data-label="Start time" className="px-3 py-2 text-gray-600 text-xs">
-                        {epoch?.startTime ? formatTimestamp(epoch.startTime, 'milliseconds') : 'N/A'}
+                        {epoch?.firstBlockTime ? formatTimestamp(epoch.firstBlockTime, 'milliseconds') : 'N/A'}
                       </td>
                       <td data-label="Fee multiplier" className="px-3 py-2">{epoch?.feeMultiplier?.toFixed?.(4) ?? 'N/A'}</td>
                     </tr>

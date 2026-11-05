@@ -4,26 +4,25 @@ import { useUrlParam } from '../../lib/location';
 import { ReadError, Reading } from '../../components/ReadState';
 import { Card, Stat } from '../../components/Card';
 import { JsonView } from '../../components/JsonView';
-import { useDapi } from '../../hooks/useDapi';
+import { platformRead } from '../../lib/platform';
 import { useNetworkStore } from '../../store/network';
-import { hexToBytes, hexToBase58 } from '../../lib/dapi';
+import { identifierToBytes, identifierToBase58 } from '../../lib/identifier';
 
 export function IdentityLookup() {
   const [submitted, setSubmitted] = useUrlParam('identity');
   const [identityId, setIdentityId] = useState(submitted);
   useEffect(() => setIdentityId(submitted), [submitted]);
 
-  const client = useDapi();
   const network = useNetworkStore((s) => s.network);
 
   const { data, isFetching: isLoading, error, refetch } = useQuery({
     queryKey: ['identity', network, submitted],
     queryFn: async () => {
       if (!submitted) return null;
-      const idBytes = hexToBytes(submitted);
+      const idBytes = identifierToBytes(submitted);
       const [identity, balance] = await Promise.all([
-        client.platform.getIdentity(idBytes),
-        client.platform.getIdentityBalance(idBytes).catch(() => null),
+        platformRead(network, (sdk) => sdk.identities.fetch(idBytes)),
+        platformRead(network, async (sdk) => ({ balance: await sdk.identities.balance(idBytes) })).catch(() => null),
       ]);
       return { identity, balance };
     },
@@ -41,16 +40,16 @@ export function IdentityLookup() {
   return (
     <Card title="Identity lookup">
       <form onSubmit={handleSubmit} className="lookup-form space-y-3 mb-4">
-        <label htmlFor="identity-input">Identity ID (64 hexadecimal characters)</label>
+        <label htmlFor="identity-input">Identity ID (base58 or hex)</label>
         <div className="lookup-fields">
           <input
             id="identity-input"
-            required pattern="(?:0x)?[0-9a-fA-F]{64}"
-            title="Use a 32-byte ID: 64 hexadecimal characters."
+            required
+            title="Use a base58 Platform ID or 64 hexadecimal characters."
             type="text"
             value={identityId}
             onChange={(e) => setIdentityId(e.target.value)}
-            placeholder="Identity ID (hex, 32 bytes)"
+            placeholder="Identity ID (base58 or hex)"
             className="flex-1 border border-gray-300 rounded px-3 py-1.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand"
           />
           <button
@@ -61,21 +60,22 @@ export function IdentityLookup() {
           </button>
         </div>
         <p className="text-xs text-gray-500">
-          Enter a 32-byte hex identity ID (e.g., from a Dash Platform application)
+          Paste the same base58 identity ID used in Explorer, or a 32-byte hex ID.
         </p>
       </form>
 
       {isLoading && <Reading subject="the lookup result" />}
-      {error && !isLoading && <ReadError error={error} subject="the lookup result" />}
+      {error && !isLoading && <ReadError error={error} subject="the lookup result" onRetry={() => void refetch()} />}
 
-      {submitted && /^(?:0x)?[0-9a-fA-F]{64}$/.test(submitted) && <p className="text-sm mb-4"><a href={window.dashhq.href('explorer', '/identity/?id=' + hexToBase58(submitted), { network })}>Open identity in Explorer →</a></p>}
+      {submitted && data && <p className="text-sm mb-4"><a href={window.dashhq.href('explorer', '/identity/?id=' + identifierToBase58(submitted), { network })}>Open identity in Explorer →</a></p>}
 
+      {data && !data.identity && <p className="text-sm">No identity found on {network === 'mainnet' ? 'Mainnet' : 'Testnet'}. Check the ID or change the network.</p>}
       {data?.identity ? (
         <div className="space-y-4">
           {data.balance ? (
             <Stat
               label="Credit balance"
-              value={`${Number(data.balance.balance).toLocaleString()} credits`}
+              value={`${Number(data.balance.balance ?? 0n).toLocaleString()} credits`}
             />
           ) : null}
           <div>

@@ -4,9 +4,9 @@ import { useUrlParam } from '../../lib/location';
 import { ReadError, Reading } from '../../components/ReadState';
 import { Card } from '../../components/Card';
 import { JsonView } from '../../components/JsonView';
-import { useDapi } from '../../hooks/useDapi';
+import { platformRead } from '../../lib/platform';
 import { useNetworkStore } from '../../store/network';
-import { hexToBytes, hexToBase58 } from '../../lib/dapi';
+import { identifierToBytes, identifierToBase58 } from '../../lib/identifier';
 
 const KNOWN_CONTRACTS = [
   {
@@ -21,15 +21,14 @@ export function DataContractViewer() {
   const [contractId, setContractId] = useState(submitted);
   useEffect(() => setContractId(submitted), [submitted]);
 
-  const client = useDapi();
   const network = useNetworkStore((s) => s.network);
 
-  const { data, isFetching: isLoading, error, refetch } = useQuery({
+  const { data, isFetching: isLoading, isSuccess, error, refetch } = useQuery({
     queryKey: ['dataContract', network, submitted],
     queryFn: async () => {
       if (!submitted) return null;
-      const idBytes = hexToBytes(submitted);
-      return client.platform.getDataContract(idBytes);
+      const idBytes = identifierToBytes(submitted);
+      return platformRead(network, async (sdk) => (await sdk.contracts.fetch(idBytes))?.toJSON(sdk.version()) ?? null);
     },
     enabled: !!submitted,
   });
@@ -50,16 +49,16 @@ export function DataContractViewer() {
   return (
     <Card title="Data contract">
       <form onSubmit={handleSubmit} className="lookup-form space-y-3 mb-4">
-        <label htmlFor="contract-input">Contract ID (64 hexadecimal characters)</label>
+        <label htmlFor="contract-input">Contract ID (base58 or hex)</label>
         <div className="lookup-fields">
           <input
             id="contract-input"
-            required pattern="(?:0x)?[0-9a-fA-F]{64}"
-            title="Use a 32-byte ID: 64 hexadecimal characters."
+            required
+            title="Use a base58 Platform ID or 64 hexadecimal characters."
             type="text"
             value={contractId}
             onChange={(e) => setContractId(e.target.value)}
-            placeholder="Data Contract ID (hex, 32 bytes)"
+            placeholder="Data Contract ID (base58 or hex)"
             className="flex-1 border border-gray-300 rounded px-3 py-1.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand"
           />
           <button
@@ -88,9 +87,10 @@ export function DataContractViewer() {
       </div>
 
       {isLoading && <Reading subject="the lookup result" />}
-      {error && !isLoading && <ReadError error={error} subject="the lookup result" />}
+      {error && !isLoading && <ReadError error={error} subject="the lookup result" onRetry={() => void refetch()} />}
+      {isSuccess && !isLoading && !data && <p className="text-sm">No contract found on {network === 'mainnet' ? 'Mainnet' : 'Testnet'}. Check the ID or change the network.</p>}
 
-      {submitted && /^(?:0x)?[0-9a-fA-F]{64}$/.test(submitted) && <p className="text-sm mb-4"><a href={window.dashhq.href('explorer', '/contract/?id=' + hexToBase58(submitted), { network })}>Open contract in Explorer →</a></p>}
+      {submitted && data && <p className="text-sm mb-4"><a href={window.dashhq.href('explorer', '/contract/?id=' + identifierToBase58(submitted), { network })}>Open contract in Explorer →</a></p>}
 
       {data ? (
         <div>

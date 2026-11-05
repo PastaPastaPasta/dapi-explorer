@@ -7,7 +7,7 @@ const fromUrl = (): NetworkType => new URLSearchParams(window.location.search).g
 
 export const useNetworkStore = create<{ network: NetworkType; setNetwork: (network: NetworkType) => void }>(() => ({
   network: fromUrl(),
-  setNetwork: (network) => updateUrl({ network: network === 'mainnet' ? '' : network }),
+  setNetwork: (network) => updateUrl({ network }),
 }));
 
 window.addEventListener('popstate', () => {

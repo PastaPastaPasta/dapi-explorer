@@ -1,8 +1,15 @@
-export function ReadError({ error, subject = 'this response' }: { error: Error; subject?: string }) {
-  const sdkMismatch = error.message.includes('getTotalSyncedTime');
+import { useMemo } from 'react';
+import { useNetworkStore } from '../store/network';
+
+export function ReadError({ error, subject = 'this response', onRetry }: { error: Error; subject?: string; onRetry?: () => void }) {
+  const network = useNetworkStore((s) => s.network);
+  const endedAt = useMemo(() => new Date().toISOString().slice(11, 19), [error]);
+  const unsupported = /endpoint is not supported|unimplemented/i.test(error.message);
   return <div className="read-error" role="alert">
     <p className="font-medium">Couldn’t read {subject} from this node.</p>
-    <p className="text-sm mt-1">{sdkMismatch ? 'The installed DAPI SDK cannot decode this node’s status response. Other queries are still available.' : 'Check the input and network, or try again shortly.'}</p>
+    <p className="text-sm mt-1">{unsupported ? 'This node no longer exposes the legacy consensus endpoint. Platform version, sync state and epochs are available above.' : `${network === 'mainnet' ? 'Mainnet' : 'Testnet'} read unavailable. Other queries remain usable. Retry, or change the network in the bar.`}</p>
+    <p className="text-xs mt-2">Attempt ended at {endedAt} UTC.</p>
+    {onRetry && <button className="mt-3 lookup-button" onClick={onRetry}>Try again</button>}
     <details className="mt-3 text-sm"><summary>Technical details</summary><pre>{error.message}</pre></details>
   </div>;
 }
