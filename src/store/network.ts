@@ -1,25 +1,19 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
 import type { NetworkType } from '../lib/networks';
-import { defaultNetwork } from '../lib/networks';
 import { disconnectClient } from '../lib/dapi';
+import { updateUrl } from '../lib/location';
 
-interface NetworkState {
-  network: NetworkType;
-  setNetwork: (network: NetworkType) => void;
-}
+const fromUrl = (): NetworkType => new URLSearchParams(window.location.search).get('network') === 'testnet' ? 'testnet' : 'mainnet';
 
-export const useNetworkStore = create<NetworkState>()(
-  persist(
-    (set) => ({
-      network: defaultNetwork,
-      setNetwork: (network) => {
-        disconnectClient();
-        set({ network });
-      },
-    }),
-    {
-      name: 'dapi-explorer-network',
-    }
-  )
-);
+export const useNetworkStore = create<{ network: NetworkType; setNetwork: (network: NetworkType) => void }>(() => ({
+  network: fromUrl(),
+  setNetwork: (network) => updateUrl({ network: network === 'mainnet' ? '' : network }),
+}));
+
+window.addEventListener('popstate', () => {
+  const network = fromUrl();
+  if (useNetworkStore.getState().network !== network) {
+    disconnectClient();
+    useNetworkStore.setState({ network });
+  }
+});

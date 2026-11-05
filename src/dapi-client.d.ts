@@ -98,7 +98,7 @@ declare module '@dashevo/dapi-client' {
     number: number;
     firstBlockHeight: string;
     firstCoreBlockHeight: number;
-    startTime: string;
+    startTime: bigint;
     feeMultiplier: number;
   }
 

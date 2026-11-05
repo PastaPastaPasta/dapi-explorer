@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useUrlParam } from './lib/location';
 import { Layout } from './components/Layout';
 import { Dashboard } from './features/dashboard/Dashboard';
 import { BlockchainStatus } from './features/core/BlockchainStatus';
@@ -12,13 +12,15 @@ import { EpochInfo } from './features/platform/EpochInfo';
 
 const tabs = [
   { id: 'dashboard', label: 'Dashboard' },
-  { id: 'core', label: 'Core (L1)' },
-  { id: 'platform', label: 'Platform (L2)' },
-  { id: 'stream', label: 'Live Stream' },
+  { id: 'core', label: 'Core' },
+  { id: 'platform', label: 'Platform' },
+  { id: 'stream', label: 'Live stream' },
 ];
 
 function App() {
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [tab, setTab] = useUrlParam('tab', 'dashboard');
+  const activeTab = tabs.some(item => item.id === tab) ? tab : 'dashboard';
+  const setActiveTab = (value: string) => setTab(value === 'dashboard' ? '' : value);
 
   return (
     <Layout tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab}>

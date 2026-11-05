@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { ReadError } from '../../components/ReadState';
 import { Card } from '../../components/Card';
 import { useDapi } from '../../hooks/useDapi';
 import { useNetworkStore } from '../../store/network';
@@ -87,29 +88,25 @@ export function BlockStream() {
 
   useEffect(() => {
     return () => {
-      abortRef.current = true;
+      stopStream();
+      setBlocks([]);
     };
-  }, [network]);
+  }, [network, stopStream]);
 
   return (
-    <Card title="Block Stream (Real-time)">
+    <Card title="Live block stream">
       <div className="space-y-4">
         <div className="flex items-center gap-3">
           <button
             onClick={isStreaming ? stopStream : startStream}
             disabled={!currentHeight}
-            className={`px-4 py-1.5 rounded text-sm transition-colors ${
-              isStreaming
-                ? 'bg-red-500 text-white hover:bg-red-600'
-                : 'bg-dash-blue text-white hover:bg-dash-dark'
-            } disabled:opacity-50 disabled:cursor-not-allowed`}
+            className="lookup-button px-4 py-1.5 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isStreaming ? 'Stop' : 'Start'} Stream
           </button>
           {isStreaming && (
             <span className="flex items-center gap-2 text-sm text-green-600">
               <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
               </span>
               Streaming
@@ -118,7 +115,7 @@ export function BlockStream() {
         </div>
 
         {error && (
-          <div className="text-red-600 text-sm bg-red-50 rounded p-3">{error}</div>
+          <ReadError error={new Error(error)} subject="the block stream" />
         )}
 
         {blocks.length > 0 && (
@@ -135,14 +132,14 @@ export function BlockStream() {
               <tbody className="divide-y divide-gray-100">
                 {blocks.map((block) => (
                   <tr key={block.height} className="hover:bg-gray-50">
-                    <td className="px-3 py-2 font-mono">{block.height}</td>
-                    <td className="px-3 py-2 font-mono text-xs">
-                      {block.hash.slice(0, 12)}...
+                    <td data-label="Height" className="px-3 py-2 font-mono">{block.height}</td>
+                    <td data-label="Hash" className="px-3 py-2 font-mono text-xs">
+                      <dashhq-hash value={block.hash} label="Block hash" />
                     </td>
-                    <td className="px-3 py-2 text-gray-600">
+                    <td data-label="Time" className="px-3 py-2 text-gray-600">
                       {formatRelativeTime(block.timestamp)}
                     </td>
-                    <td className="px-3 py-2">
+                    <td data-label="ChainLock" className="px-3 py-2">
                       <span
                         className={`inline-flex px-2 py-0.5 rounded text-xs ${
                           block.chainLocked

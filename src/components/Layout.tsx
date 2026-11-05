@@ -1,49 +1,52 @@
-import React from 'react';
-import { NetworkSelector } from './NetworkSelector';
-
-interface Tab {
-  id: string;
-  label: string;
-}
+import { useEffect, useRef, type ReactNode } from 'react';
+import { useNetworkStore } from '../store/network';
+import type { DashhqNetworkEventDetail } from '../../public/dashhq/dashhq-shell';
+import type {} from '../../public/dashhq/dashhq-shell.react';
 
 interface LayoutProps {
-  children: React.ReactNode;
-  tabs: Tab[];
+  children: ReactNode;
+  tabs: { id: string; label: string }[];
   activeTab: string;
   onTabChange: (id: string) => void;
 }
 
 export function Layout({ children, tabs, activeTab, onTabChange }: LayoutProps) {
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center justify-between h-14">
-            <div className="flex items-center gap-6">
-              <h1 className="text-lg font-semibold text-gray-900">
-                <span className="text-dash-blue">DAPI</span> Explorer
-              </h1>
-              <nav className="flex gap-1">
-                {tabs.map((tab) => (
-                  <button
-                    key={tab.id}
-                    onClick={() => onTabChange(tab.id)}
-                    className={`px-3 py-2 text-sm rounded-md transition-colors ${
-                      activeTab === tab.id
-                        ? 'bg-dash-blue text-white'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                    }`}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </nav>
-            </div>
-            <NetworkSelector />
-          </div>
-        </div>
-      </header>
-      <main className="max-w-7xl mx-auto px-4 py-6">{children}</main>
-    </div>
-  );
+  const bar = useRef<HTMLElement>(null);
+  const { network, setNetwork } = useNetworkStore();
+  useEffect(() => {
+    const element = bar.current!;
+    const change = (event: Event) => {
+      event.preventDefault();
+      const { network: next } = (event as CustomEvent<DashhqNetworkEventDetail>).detail;
+      if (next === 'mainnet' || next === 'testnet') setNetwork(next);
+    };
+    element.addEventListener('dashhq-network', change);
+    return () => element.removeEventListener('dashhq-network', change);
+  }, [setNetwork]);
+
+  return <>
+    <a className="skip-link" href="#main">Skip to content</a>
+    <dashhq-bar ref={bar} product="dapi" network={network} networks="mainnet testnet" sticky="">
+      <nav slot="nav" aria-label="DAPI console">
+        {tabs.map(tab => {
+          const url = new URL(window.location.href);
+          if (tab.id === 'dashboard') url.searchParams.delete('tab');
+          else url.searchParams.set('tab', tab.id);
+          return <a key={tab.id} href={url.pathname + url.search} aria-current={activeTab === tab.id ? 'page' : undefined}
+            onClick={event => { if (!event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey && event.button === 0) { event.preventDefault(); onTabChange(tab.id); } }}>{tab.label}</a>;
+        })}
+      </nav>
+    </dashhq-bar>
+    <main id="main" className="app-main">
+      <div className="page-intro">
+        <p className="tool-links"><a href={window.dashhq.href('explorer', '/', { network })}>Explorer</a><span>/</span><span>Tools</span><a href={window.dashhq.href('fees')}>Fee estimator →</a></p>
+        <h1>DAPI console</h1>
+        <p>Read Core and Platform directly from a node. Responses are reported data; this console does not verify proofs.</p>
+      </div>
+      {children}
+    </main>
+    <dashhq-footer product="dapi" source="https://github.com/PastaPastaPasta/dapi-explorer">
+      <p>Public, read-only queries. <a href={window.dashhq.href('explorer', '/', { network })}>Open Explorer</a> · <a href={window.dashhq.href('fees')}>Estimate contract fees</a></p>
+    </dashhq-footer>
+  </>;
 }

@@ -24,12 +24,12 @@ export function JsonView({ data, maxHeight = '400px' }: JsonViewProps) {
     <div className="relative">
       <button
         onClick={() => setExpanded(!expanded)}
-        className="absolute top-2 right-2 text-xs text-gray-500 hover:text-gray-700 bg-gray-100 px-2 py-1 rounded"
+        className="mb-2 text-xs text-gray-500 hover:text-gray-700 bg-gray-100 px-2 py-1 rounded"
       >
         {expanded ? 'Collapse' : 'Expand'}
       </button>
       <pre
-        className="bg-gray-50 rounded p-3 text-xs font-mono overflow-auto"
+        className="bg-gray-50 rounded p-3 text-xs font-mono overflow-auto whitespace-pre-wrap break-all"
         style={{ maxHeight: expanded ? 'none' : maxHeight }}
       >
         {jsonString}

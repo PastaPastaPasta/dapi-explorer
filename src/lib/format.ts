@@ -1,6 +1,7 @@
-export function formatTimestamp(timestamp: number | string): string {
-  const date = new Date(typeof timestamp === 'string' ? timestamp : timestamp * 1000);
-  return date.toLocaleString();
+export function formatTimestamp(timestamp: number | bigint | string, unit: 'seconds' | 'milliseconds' = 'seconds'): string {
+  const numeric = typeof timestamp !== 'string' || /^\d+$/.test(timestamp);
+  const date = new Date(numeric ? Number(timestamp) * (unit === 'seconds' ? 1000 : 1) : String(timestamp));
+  return Number.isNaN(date.getTime()) ? 'Unavailable' : date.toLocaleString();
 }
 
 export function formatRelativeTime(timestamp: number | string): string {

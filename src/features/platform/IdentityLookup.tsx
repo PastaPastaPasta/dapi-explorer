@@ -1,19 +1,22 @@
-import { useState, type FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useUrlParam } from '../../lib/location';
+import { ReadError, Reading } from '../../components/ReadState';
 import { Card, Stat } from '../../components/Card';
 import { JsonView } from '../../components/JsonView';
 import { useDapi } from '../../hooks/useDapi';
 import { useNetworkStore } from '../../store/network';
-import { hexToBytes } from '../../lib/dapi';
+import { hexToBytes, hexToBase58 } from '../../lib/dapi';
 
 export function IdentityLookup() {
-  const [identityId, setIdentityId] = useState('');
-  const [submitted, setSubmitted] = useState<string | null>(null);
+  const [submitted, setSubmitted] = useUrlParam('identity');
+  const [identityId, setIdentityId] = useState(submitted);
+  useEffect(() => setIdentityId(submitted), [submitted]);
 
   const client = useDapi();
   const network = useNetworkStore((s) => s.network);
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isFetching: isLoading, error, refetch } = useQuery({
     queryKey: ['identity', network, submitted],
     queryFn: async () => {
       if (!submitted) return null;
@@ -30,26 +33,31 @@ export function IdentityLookup() {
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (identityId.trim()) {
-      setSubmitted(identityId.trim());
+      if (submitted === identityId.trim()) void refetch();
+      else setSubmitted(identityId.trim());
     }
   };
 
   return (
-    <Card title="Identity Lookup">
-      <form onSubmit={handleSubmit} className="space-y-3 mb-4">
-        <div className="flex gap-2">
+    <Card title="Identity lookup">
+      <form onSubmit={handleSubmit} className="lookup-form space-y-3 mb-4">
+        <label htmlFor="identity-input">Identity ID (64 hexadecimal characters)</label>
+        <div className="lookup-fields">
           <input
+            id="identity-input"
+            required pattern="(?:0x)?[0-9a-fA-F]{64}"
+            title="Use a 32-byte ID: 64 hexadecimal characters."
             type="text"
             value={identityId}
             onChange={(e) => setIdentityId(e.target.value)}
             placeholder="Identity ID (hex, 32 bytes)"
-            className="flex-1 border border-gray-300 rounded px-3 py-1.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-dash-blue"
+            className="flex-1 border border-gray-300 rounded px-3 py-1.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand"
           />
           <button
             type="submit"
-            className="bg-dash-blue text-white px-4 py-1.5 rounded text-sm hover:bg-dash-dark transition-colors"
+            className="lookup-button px-4 py-1.5 rounded text-sm transition-colors"
           >
-            Lookup
+            Look up identity
           </button>
         </div>
         <p className="text-xs text-gray-500">
@@ -57,28 +65,21 @@ export function IdentityLookup() {
         </p>
       </form>
 
-      {isLoading && (
-        <div className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-6 w-6 border-2 border-dash-blue border-t-transparent" />
-        </div>
-      )}
+      {isLoading && <Reading subject="the lookup result" />}
+      {error && !isLoading && <ReadError error={error} subject="the lookup result" />}
 
-      {error && (
-        <div className="text-red-600 text-sm bg-red-50 rounded p-3">
-          {(error as Error).message}
-        </div>
-      )}
+      {submitted && /^(?:0x)?[0-9a-fA-F]{64}$/.test(submitted) && <p className="text-sm mb-4"><a href={window.dashhq.href('explorer', '/identity/?id=' + hexToBase58(submitted), { network })}>Open identity in Explorer →</a></p>}
 
       {data?.identity ? (
         <div className="space-y-4">
           {data.balance ? (
             <Stat
-              label="Credit Balance"
+              label="Credit balance"
               value={`${Number(data.balance.balance).toLocaleString()} credits`}
             />
           ) : null}
           <div>
-            <dt className="text-xs text-gray-500 uppercase tracking-wide mb-2">Identity Data</dt>
+            <dt className="text-xs text-gray-500 mb-2">Identity data</dt>
             <JsonView data={data.identity} />
           </div>
         </div>

@@ -1,27 +1,30 @@
-import { useState, type FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useUrlParam } from '../../lib/location';
+import { ReadError, Reading } from '../../components/ReadState';
 import { Card } from '../../components/Card';
 import { JsonView } from '../../components/JsonView';
 import { useDapi } from '../../hooks/useDapi';
 import { useNetworkStore } from '../../store/network';
-import { hexToBytes } from '../../lib/dapi';
+import { hexToBytes, hexToBase58 } from '../../lib/dapi';
 
 const KNOWN_CONTRACTS = [
   {
-    name: 'DPNS (Domain Names)',
-    id: '6469736874657374646f6d61696e73746573746e657470726f746f636f6c3131',
+    name: 'Usernames (DPNS)',
+    id: 'e668c659af66aee1e72c186dde7b5b7e0a1d712a09c40d5721f622bf53c53155',
     description: 'Dash Platform Naming Service',
   },
 ];
 
 export function DataContractViewer() {
-  const [contractId, setContractId] = useState('');
-  const [submitted, setSubmitted] = useState<string | null>(null);
+  const [submitted, setSubmitted] = useUrlParam('contract');
+  const [contractId, setContractId] = useState(submitted);
+  useEffect(() => setContractId(submitted), [submitted]);
 
   const client = useDapi();
   const network = useNetworkStore((s) => s.network);
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isFetching: isLoading, error, refetch } = useQuery({
     queryKey: ['dataContract', network, submitted],
     queryFn: async () => {
       if (!submitted) return null;
@@ -34,7 +37,8 @@ export function DataContractViewer() {
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (contractId.trim()) {
-      setSubmitted(contractId.trim());
+      if (submitted === contractId.trim()) void refetch();
+      else setSubmitted(contractId.trim());
     }
   };
 
@@ -44,21 +48,25 @@ export function DataContractViewer() {
   };
 
   return (
-    <Card title="Data Contract Viewer">
-      <form onSubmit={handleSubmit} className="space-y-3 mb-4">
-        <div className="flex gap-2">
+    <Card title="Data contract">
+      <form onSubmit={handleSubmit} className="lookup-form space-y-3 mb-4">
+        <label htmlFor="contract-input">Contract ID (64 hexadecimal characters)</label>
+        <div className="lookup-fields">
           <input
+            id="contract-input"
+            required pattern="(?:0x)?[0-9a-fA-F]{64}"
+            title="Use a 32-byte ID: 64 hexadecimal characters."
             type="text"
             value={contractId}
             onChange={(e) => setContractId(e.target.value)}
             placeholder="Data Contract ID (hex, 32 bytes)"
-            className="flex-1 border border-gray-300 rounded px-3 py-1.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-dash-blue"
+            className="flex-1 border border-gray-300 rounded px-3 py-1.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-brand"
           />
           <button
             type="submit"
-            className="bg-dash-blue text-white px-4 py-1.5 rounded text-sm hover:bg-dash-dark transition-colors"
+            className="lookup-button px-4 py-1.5 rounded text-sm transition-colors"
           >
-            Fetch
+            Fetch contract
           </button>
         </div>
       </form>
@@ -79,21 +87,14 @@ export function DataContractViewer() {
         </div>
       </div>
 
-      {isLoading && (
-        <div className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-6 w-6 border-2 border-dash-blue border-t-transparent" />
-        </div>
-      )}
+      {isLoading && <Reading subject="the lookup result" />}
+      {error && !isLoading && <ReadError error={error} subject="the lookup result" />}
 
-      {error && (
-        <div className="text-red-600 text-sm bg-red-50 rounded p-3">
-          {(error as Error).message}
-        </div>
-      )}
+      {submitted && /^(?:0x)?[0-9a-fA-F]{64}$/.test(submitted) && <p className="text-sm mb-4"><a href={window.dashhq.href('explorer', '/contract/?id=' + hexToBase58(submitted), { network })}>Open contract in Explorer →</a></p>}
 
       {data ? (
         <div>
-          <dt className="text-xs text-gray-500 uppercase tracking-wide mb-2">Contract Schema</dt>
+          <dt className="text-xs text-gray-500 mb-2">Contract schema</dt>
           <JsonView data={data} maxHeight="500px" />
         </div>
       ) : null}

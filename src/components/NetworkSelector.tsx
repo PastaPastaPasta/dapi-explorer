@@ -10,7 +10,7 @@ export function NetworkSelector() {
       <select
         value={network}
         onChange={(e) => setNetwork(e.target.value as NetworkType)}
-        className="text-sm border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-dash-blue focus:border-transparent"
+        className="text-sm border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent"
       >
         {Object.values(networks).map((net) => (
           <option key={net.network} value={net.network}>
