@@ -114,7 +114,7 @@ export function PlatformStatus() {
               }
             />
           </dl>
-          <dl className="dh-kv node-facts">
+          <dl className="node-facts">
             <div>
               <dt>DAPI</dt>
               <dd>{String(software?.dapi ?? "Not reported")}</dd>

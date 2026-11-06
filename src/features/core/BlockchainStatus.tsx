@@ -82,7 +82,7 @@ export function BlockchainStatus() {
             />
             <Stat label="Peers" value={status.network?.peersCount ?? "N/A"} />
           </dl>
-          <dl className="dh-kv node-facts mt-4">
+          <dl className="node-facts mt-4">
             <div>
               <dt>Chain</dt>
               <dd>{status.chain?.name ?? "Not reported"}</dd>

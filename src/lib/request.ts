@@ -20,7 +20,7 @@ export function coreHealth(status: string | undefined): { label: string; tone: s
 }
 
 export function coreVerdict(status: string | undefined, syncProgress: number | undefined): string {
-  if (status === 'ERROR') return `Node reports ERROR${syncProgress !== undefined && syncProgress >= 1 ? ' while fully synced' : ''}. This is one node’s health report; see the raw response.`;
+  if (status === 'ERROR') return `Node reports ERROR${syncProgress !== undefined && (syncProgress * 100).toFixed(2) === '100.00' ? ' while reporting 100% sync' : ''}. This is one node’s health report; see the raw response.`;
   if (status === 'READY') return 'Node reports ready. Responses have not been proof-checked.';
   return `Node reports ${status ?? 'no health status'}. See the raw response.`;
 }

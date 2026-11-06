@@ -34,10 +34,11 @@ test('reads settle at their deadline and retain successful responses', async () 
 });
 
 test('Core verdict distinguishes one node health from sync progress', () => {
-  assert.match(coreVerdict('ERROR', 1), /ERROR while fully synced/);
+  assert.match(coreVerdict('ERROR', 1), /ERROR while reporting 100% sync/);
+  assert.match(coreVerdict('ERROR', 0.99999999), /reporting 100% sync/);
   assert.match(coreVerdict('ERROR', 1), /one node/);
-  assert.doesNotMatch(coreVerdict('ERROR', 0.7), /fully synced/);
-  assert.doesNotMatch(coreVerdict('ERROR', undefined), /fully synced/);
+  assert.doesNotMatch(coreVerdict('ERROR', 0.7), /100% sync/);
+  assert.doesNotMatch(coreVerdict('ERROR', undefined), /100% sync/);
   assert.match(coreVerdict(undefined, 1), /no health status/);
   assert.doesNotMatch(coreVerdict(undefined, 1), /ready/);
   assert.match(coreVerdict('READY', 1), /not been proof-checked/);
