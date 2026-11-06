@@ -63,7 +63,7 @@ export function BlockchainStatus() {
               </p>
             </div>
           )}
-          <dl className="dh-stats grid grid-cols-2 md:grid-cols-3 gap-4">
+          <dl className="dh-stats node-key-stats">
             <Stat
               label="Block height"
               value={
