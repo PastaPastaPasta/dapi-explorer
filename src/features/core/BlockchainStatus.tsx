@@ -22,7 +22,7 @@ export function BlockchainStatus() {
           <JsonView data={status} />
         </div>
       )}
-      {data && <div className="dh-source mb-4">
+      {data && <div className="dh-sources mb-4" aria-label="Core response source">
         <p>Source: Core node · <HashValue value={data.source} label="Responding Core endpoint" full /></p>
         <p>Read at {new Date(data.readAt).toISOString().replace('T', ' ').slice(0, 19)} UTC · refreshed every 10 seconds{error ? ' · refresh failed' : ''}</p>
       </div>}

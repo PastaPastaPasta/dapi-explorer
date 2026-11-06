@@ -27,8 +27,8 @@ export function PlatformStatus() {
 
   return (
     <Card title="Platform status" loading={isLoading} error={error} onRetry={() => void refetch()}>
-      {s && <div className="dh-source mb-4">
-        <p>Source: Platform node · Responses are not proof-checked here.</p>
+      {s && <div className="dh-sources mb-4" aria-label="Platform response source">
+        <p>Source: Platform node · Not proof-checked</p>
         <p>Responding node: <HashValue value={proTxHash} label="Responding ProTx hash" href={proTxHash ? window.dashhq.href('nodes', `/mn/${proTxHash}`, { network: selectedNetwork }) : undefined} /></p>
         <p><a href={window.dashhq.href('nodes', '/', { network: selectedNetwork })}>See network-wide health in Radar →</a></p>
         <p className="text-xs text-gray-500 mt-2">Read at {new Date(dataUpdatedAt).toISOString().replace('T', ' ').slice(0, 19)} UTC · SDK 5.0.0-rc.8</p>
