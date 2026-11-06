@@ -50,7 +50,7 @@ export function Layout({ children, tabs, activeTab, onTabChange }: LayoutProps) 
       {children}
     </main>
     <dashhq-footer product="dapi" source="https://github.com/PastaPastaPasta/dapi-explorer">
-      <p>Public, read-only queries. <a href={window.dashhq.href('explorer', '/', { network })}>Open Explorer</a> · <a href={window.dashhq.href('explorer', '/tools/fees/', { network })}>Estimate contract fees</a></p>
+      <p>Public, read-only queries. <a href={window.dashhq.href('explorer', '/', { network })}>Open Explorer</a> · <a href={window.dashhq.href('explorer', '/tools/fees/', { network })}>Fee estimator</a></p>
     </dashhq-footer>
   </>;
 }
