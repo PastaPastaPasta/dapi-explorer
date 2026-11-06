@@ -27,11 +27,11 @@ export function PlatformStatus() {
 
   return (
     <Card title="Platform status" loading={isLoading} error={error} onRetry={() => void refetch()}>
-      {s && <div className="dh-notice dh-notice--info mb-4">
-        <p>This is one Platform node’s response, not network-wide health.</p>
+      {s && <div className="dh-source mb-4">
+        <p>Source: Platform node · Responses are not proof-checked here.</p>
         <p>Responding node: <HashValue value={proTxHash} label="Responding ProTx hash" href={proTxHash ? window.dashhq.href('nodes', `/mn/${proTxHash}`, { network: selectedNetwork }) : undefined} /></p>
         <p><a href={window.dashhq.href('nodes', '/', { network: selectedNetwork })}>See network-wide health in Radar →</a></p>
-        <p className="text-xs text-gray-500 mt-2">Read at {new Date(dataUpdatedAt).toISOString().slice(11, 19)} UTC · SDK 5.0.0-rc.8</p>
+        <p className="text-xs text-gray-500 mt-2">Read at {new Date(dataUpdatedAt).toISOString().replace('T', ' ').slice(0, 19)} UTC · SDK 5.0.0-rc.8</p>
       </div>}
       {s && (
         <div className="space-y-6">
@@ -41,8 +41,8 @@ export function PlatformStatus() {
               <Stat label="DAPI" value={String(software?.dapi ?? 'N/A')} mono />
               <Stat label="Drive" value={String(software?.drive ?? 'N/A')} mono />
               <Stat
-                label="Drive protocol"
-                value={String(s?.version?.protocol?.drive?.current ?? 'N/A')}
+                label="Platform protocol"
+                value={s?.version?.protocol?.drive?.current != null ? `v${s.version.protocol.drive.current}` : 'N/A'}
               />
             </dl>
             <dl className="dh-kv mt-4">

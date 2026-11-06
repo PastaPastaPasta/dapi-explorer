@@ -1,28 +1,31 @@
 import { HashValue } from '../../components/HashValue';
 import { Card, Stat } from '../../components/Card';
 import { JsonView } from '../../components/JsonView';
-import { useBlockchainStatus, useBestBlockHeight, useBestBlockHash } from '../../hooks/useBlockchainStatus';
+import { useBlockchainStatus } from '../../hooks/useBlockchainStatus';
 import { formatNumber, formatPercent } from '../../lib/format';
 import { coreHealth } from '../../lib/request';
 
 export function BlockchainStatus() {
-  const { data: status, isLoading, error, refetch } = useBlockchainStatus();
-  const { data: height } = useBestBlockHeight();
-  const { data: hash } = useBestBlockHash();
+  const { data, isLoading, error, refetch } = useBlockchainStatus();
+  const status = data?.status;
 
   // Check if response has expected structure
   const hasExpectedStructure = status?.chain?.name !== undefined;
   const health = coreHealth(status?.status);
 
   return (
-    <Card title="Core status" loading={isLoading} error={error} onRetry={() => void refetch()}>
+    <Card title="Core status" loading={isLoading} error={data ? null : error} onRetry={() => void refetch()}>
+      {data && error && <p className="dh-notice dh-notice--warn mb-4">Refresh failed. Showing the last successful read. <button type="button" className="dh-btn" onClick={() => void refetch()}>Retry Core status</button></p>}
       {status && !hasExpectedStructure && (
         <div>
           <p className="text-sm text-gray-500 mb-2">Raw response (unexpected format):</p>
           <JsonView data={status} />
         </div>
       )}
-      {status && <p className="text-xs text-gray-500 mb-4">Reported by a Core node; refreshed every 10 seconds.</p>}
+      {data && <div className="dh-source mb-4">
+        <p>Source: Core node · <HashValue value={data.source} label="Responding Core endpoint" full /></p>
+        <p>Read at {new Date(data.readAt).toISOString().replace('T', ' ').slice(0, 19)} UTC · refreshed every 10 seconds{error ? ' · refresh failed' : ''}</p>
+      </div>}
       {status?.status === 'ERROR' && <p className="dh-notice dh-notice--warn mb-4">The node answered but reports a local health problem. This is one node’s response, not a network-wide outage. Try refreshing its status; other lookups remain available.</p>}
       {status && hasExpectedStructure && (
         <dl className="dh-stats grid grid-cols-2 md:grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-4">
@@ -38,12 +41,12 @@ export function BlockchainStatus() {
               ) : 'N/A'
             }
           />
-          <Stat label="Block height" value={height !== undefined || status.chain?.blocksCount !== undefined ? formatNumber(height ?? status.chain!.blocksCount!) : 'N/A'} />
+          <Stat label="Block height" value={status.chain?.blocksCount !== undefined ? formatNumber(status.chain.blocksCount) : 'N/A'} />
           <Stat label="Headers" value={status.chain?.headersCount !== undefined ? formatNumber(status.chain.headersCount) : 'N/A'} />
           <Stat label="Peers" value={status.network?.peersCount ?? 'N/A'} />
           <Stat
             label="Best block hash"
-            value={<HashValue value={hash ?? status.chain?.bestBlockHash} label="Best block hash" />}
+            value={<HashValue value={status.chain?.bestBlockHash} label="Best block hash" />}
             mono
           />
           <Stat label="Protocol version" value={status.version?.protocol ?? 'N/A'} />

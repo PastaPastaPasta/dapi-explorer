@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { withDeadline } from '../lib/request';
 import { useDapi } from './useDapi';
 import { useNetworkStore } from '../store/network';
+import { readCoreStatus } from '../lib/core-status';
 
 export function useBlockchainStatus() {
   const client = useDapi();
@@ -9,7 +10,7 @@ export function useBlockchainStatus() {
 
   return useQuery({
     queryKey: ['blockchainStatus', network],
-    queryFn: () => withDeadline(client.core.getBlockchainStatus()),
+    queryFn: () => readCoreStatus(client),
     refetchInterval: 10000,
   });
 }

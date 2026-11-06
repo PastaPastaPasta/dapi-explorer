@@ -38,32 +38,15 @@ function App() {
 
       {activeTab === 'platform' && (
         <div className="space-y-6">
-          {identity ? (
-            <>
-              <p className="dh-notice dh-notice--info">
-                Opened from Explorer with your identity and network prefilled.{' '}
-                <a href="#platform-diagnostics">Other Platform diagnostics ↓</a>
-              </p>
-              <IdentityLookup />
-              <details id="platform-diagnostics">
-                <summary>Platform status, contracts and epochs</summary>
-                <div className="space-y-6">
-                  <PlatformStatus />
-                  <DataContractViewer />
-                  <EpochInfo />
-                </div>
-              </details>
-            </>
-          ) : (
-            <>
-              <PlatformStatus />
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <IdentityLookup />
-                <DataContractViewer />
-              </div>
-              <EpochInfo />
-            </>
-          )}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <IdentityLookup />
+            <DataContractViewer />
+          </div>
+          <EpochInfo />
+          <details id="platform-diagnostics">
+            <summary>Platform node diagnostics</summary>
+            <PlatformStatus />
+          </details>
         </div>
       )}
 

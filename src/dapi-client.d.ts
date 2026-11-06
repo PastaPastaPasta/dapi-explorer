@@ -122,8 +122,12 @@ declare module '@dashevo/dapi-client' {
   }
 
   interface DAPIClientInstance {
+    dapiAddressProvider: {
+      getLiveAddress(): Promise<{ toString(): string } | undefined>;
+      hasLiveAddresses(): Promise<boolean>;
+    };
     core: {
-      getBlockchainStatus(): Promise<BlockchainStatus>;
+      getBlockchainStatus(options?: { dapiAddressProvider: DAPIClientInstance['dapiAddressProvider'] }): Promise<BlockchainStatus>;
       getBestBlockHeight(): Promise<number>;
       getBestBlockHash(): Promise<string>;
       getBlockByHeight(height: number): Promise<Uint8Array>;
@@ -162,6 +166,7 @@ declare module '@dashevo/dapi-client' {
   class DAPIClient implements DAPIClientInstance {
     constructor(options?: DAPIClientOptions);
     core: DAPIClientInstance['core'];
+    dapiAddressProvider: DAPIClientInstance['dapiAddressProvider'];
     platform: DAPIClientInstance['platform'];
     disconnect(): Promise<void>;
   }
