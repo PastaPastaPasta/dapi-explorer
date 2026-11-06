@@ -37,7 +37,7 @@ export function Layout({ children, tabs, activeTab, onTabChange }: LayoutProps) 
       <header className="dh-page-header">
         <h1 className="dh-page-header__title">{activeTab === 'dashboard' ? 'Read a node’s status' : activeTab === 'core' ? 'Inspect Core data' : activeTab === 'platform' ? 'Look up Platform data' : 'Follow new Core blocks'}</h1>
         <p className="dh-page-header__lede">{activeTab === 'dashboard' ? 'Check Core and Platform responses from a node, then inspect an identity, contract or block.' : activeTab === 'core' ? 'Find a block or transaction and inspect its response.' : activeTab === 'platform' ? 'Read an identity, contract or epoch from the selected network.' : 'Watch the latest block height as this node reports it.'}</p>
-        <p className="dh-sources"><span>Source: DAPI nodes · Read-only · Not proof-checked</span><a href={window.dashhq.href('explorer', '/', { network })}>Verify records in Explorer →</a></p>
+        <p className="dh-sources">Source: DAPI nodes · Read-only · Not proof-checked. <a href={window.dashhq.href('explorer', '/', { network })}>Verify records in Explorer →</a></p>
       </header>
       <nav className="dh-tabs console-tabs" aria-label="DAPI console sections">
         {tabs.map(tab => {
