@@ -43,7 +43,7 @@ function App() {
             <DataContractViewer />
           </div>
           <EpochInfo />
-          <details id="platform-diagnostics">
+          <details className="dh-disclosure" id="platform-diagnostics">
             <summary>Platform node diagnostics</summary>
             <PlatformStatus />
           </details>

@@ -9,7 +9,7 @@ async function load(name) {
   return import(`data:text/javascript;base64,${Buffer.from(outputText).toString('base64')}`);
 }
 const { identifierToBytes, identifierToBase58, bytesToHex } = await load('identifier');
-const { withDeadline, coreHealth } = await load('request');
+const { withDeadline, coreHealth, coreVerdict } = await load('request');
 
 test('Explorer base58 identities and hex refer to exactly the same 32 bytes', () => {
   const id = '7P3ZsJHh61jhvVwaxh1xyNx7wkCqiDdkhw2EpCfTn9J';
@@ -31,4 +31,14 @@ test('reads settle at their deadline and retain successful responses', async () 
   await assert.rejects(withDeadline(new Promise(() => {}), 5), /did not answer/);
   assert.equal(await withDeadline(Promise.resolve(12), 100), 12);
   await assert.rejects(withDeadline(Promise.reject(new Error('bad response')), 100), /bad response/);
+});
+
+test('Core verdict distinguishes one node health from sync progress', () => {
+  assert.match(coreVerdict('ERROR', 1), /ERROR while fully synced/);
+  assert.match(coreVerdict('ERROR', 1), /one node/);
+  assert.doesNotMatch(coreVerdict('ERROR', 0.7), /fully synced/);
+  assert.doesNotMatch(coreVerdict('ERROR', undefined), /fully synced/);
+  assert.match(coreVerdict(undefined, 1), /no health status/);
+  assert.doesNotMatch(coreVerdict(undefined, 1), /ready/);
+  assert.match(coreVerdict('READY', 1), /not been proof-checked/);
 });

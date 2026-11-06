@@ -22,3 +22,10 @@ summary { cursor: pointer; color: var(--dh-brand-ink); }
 
 #root { min-height: 100vh; display: flex; flex-direction: column; }
 #main { flex: 1; }
+
+.node-verdict { font-size: 15px; margin-bottom: 18px; color: var(--dh-ink-2); }
+.node-verdict--warn { color: var(--dh-warn); }
+.node-facts { font: 14px/1.6 var(--dh-mono); }
+.node-facts > div { display: grid; grid-template-columns: minmax(110px, 1fr) minmax(0, 2fr); gap: 12px; padding-block: 8px; border-bottom: 1px solid var(--dh-line); }
+.node-facts dd { overflow-wrap: anywhere; min-width: 0; }
+.stat-number { font-size: 28px; }
