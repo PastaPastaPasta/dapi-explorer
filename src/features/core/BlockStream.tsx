@@ -85,7 +85,7 @@ export function BlockStream() {
   return (
     <Card title="Live block stream">
       <div className="space-y-4">
-        <p className="text-sm text-gray-500">Block hashes and ChainLock status are reported by the node. They are not proof-verified here.</p>
+        <p className="text-sm text-gray-500">Newest blocks appear first.</p>
         <div className="flex items-center gap-3">
           <button
             onClick={isStreaming ? stopStream : startStream}
