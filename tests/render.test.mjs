@@ -82,3 +82,89 @@ test('network recovery preserves both lookups and distinguishes pending, absent 
     }
   }
 });
+
+const epochHooks = await import(moduleUrl(new URL('../src/hooks/usePlatformStatus.ts', import.meta.url), {
+  '@tanstack/react-query': 'export const useQuery = options => options;',
+  './useDapi': 'export const useDapi = () => ({});',
+  '../store/network': "export const useNetworkStore = select => select({ network: 'mainnet' });",
+  '../lib/platform': 'export const platformRead = async (network, read) => read(globalThis.epochSdk);',
+}));
+
+test('epoch queries wait for the current index and request descending, bounded pages including genesis', async () => {
+  let query;
+  globalThis.epochSdk = { epoch: {
+    current: async () => ({ index: 87 }),
+    epochsInfo: async (options) => {
+      query = options;
+      return new Map([[0, { index: 0 }], [2, undefined], [1, { index: 1 }]]);
+    },
+  } };
+  assert.equal(epochHooks.useEpochsInfo(undefined).enabled, false);
+  assert.equal((await epochHooks.useCurrentEpoch().queryFn()).index, 87);
+  for (const start of [87, 77, 0]) {
+    const options = epochHooks.useEpochsInfo(start);
+    assert.equal(options.enabled, true);
+    assert.deepEqual(options.queryKey, ['epochsInfo', 'mainnet', start, 10]);
+    const result = await options.queryFn();
+    assert.deepEqual(query, { startEpoch: start, count: 10, ascending: false });
+    assert.deepEqual(result.epochsInfo.map(epoch => epoch.index), [1, 0]);
+  }
+});
+
+const { EpochInfo } = await import(moduleUrl(new URL('../src/features/platform/EpochInfo.tsx', import.meta.url), {
+  '../../lib/location': "export const useUrlParam = () => [globalThis.epochPage ?? '', () => {}];",
+  '../../hooks/usePlatformStatus': `
+    export const useCurrentEpoch = () => globalThis.currentEpochState;
+    export const useEpochsInfo = start => { globalThis.requestedEpoch = start; return globalThis.epochsState; };
+    export const useConsensusParams = () => ({});`,
+}));
+
+test('epoch rendering marks current and bounds older pages without falling back to genesis on failed current reads', () => {
+  globalThis.currentEpochState = { data: { index: 1 } };
+  globalThis.epochsState = { data: { epochsInfo: [{ index: 1, firstBlockHeight: 0 }, { index: 0 }] } };
+  globalThis.epochPage = '';
+  const html = render(EpochInfo);
+  assert.equal(globalThis.requestedEpoch, 1);
+  assert.match(html, /Epoch #1/);
+  assert.match(html, /Current epoch/);
+  assert.match(html, /Start block 0/);
+  assert.doesNotMatch(html, /Show earlier|Back to latest/);
+  globalThis.epochPage = '999';
+  assert.match(render(EpochInfo), /Back to latest/);
+  assert.equal(globalThis.requestedEpoch, 1);
+  globalThis.epochPage = '0';
+  render(EpochInfo);
+  assert.equal(globalThis.requestedEpoch, 0);
+  globalThis.epochPage = '-1';
+  render(EpochInfo);
+  assert.equal(globalThis.requestedEpoch, 1);
+  globalThis.epochPage = '';
+  globalThis.currentEpochState = { error: new Error('Offline') };
+  globalThis.epochsState = {};
+  const failed = render(EpochInfo);
+  assert.equal(globalThis.requestedEpoch, undefined);
+  assert.match(failed, /Couldn’t read the current epoch/);
+  assert.doesNotMatch(failed, /Current epoch<|Epoch #0/);
+});
+
+const { CoreSummary } = await import(moduleUrl(new URL('../src/features/core/BlockchainStatus.tsx', import.meta.url), {
+  '../../hooks/useBlockchainStatus': 'export const useBlockchainStatus = () => globalThis.coreSummaryState;',
+  '../../store/network': "export const useNetworkStore = select => select({ network: 'testnet' });",
+}));
+test('compact Core status retains source and freshness on failed refreshes without inventing readiness', () => {
+  globalThis.coreSummaryState = { isLoading: true };
+  assert.match(render(CoreSummary), /Reading Core status/);
+  globalThis.coreSummaryState = { error: new Error('Offline') };
+  const failed = render(CoreSummary);
+  assert.match(failed, /no health status/);
+  assert.match(failed, /no response yet/);
+  assert.match(failed, /Retry Core status/);
+  assert.doesNotMatch(failed, /READY/);
+  globalThis.coreSummaryState.data = { status: { status: 'READY', chain: { blocksCount: 0 } }, source: 'last-node:443', readAt: Date.now() };
+  const stale = render(CoreSummary);
+  assert.match(stale, /Height 0/);
+  assert.match(stale, /last-node:443/);
+  assert.match(stale, /showing the last successful read/);
+  assert.match(stale, /tab=dashboard/);
+  assert.match(stale, /network=testnet/);
+});

@@ -1,7 +1,7 @@
 import { useUrlParam } from './lib/location';
 import { Layout } from './components/Layout';
 import { Dashboard } from './features/dashboard/Dashboard';
-import { BlockchainStatus } from './features/core/BlockchainStatus';
+import { CoreSummary } from './features/core/BlockchainStatus';
 import { BlockExplorer } from './features/core/BlockExplorer';
 import { TransactionLookup } from './features/core/TransactionLookup';
 import { BlockStream } from './features/core/BlockStream';
@@ -28,11 +28,11 @@ function App() {
 
       {activeTab === 'core' && (
         <div className="space-y-6">
-          <BlockchainStatus />
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <BlockExplorer />
             <TransactionLookup />
           </div>
+          <CoreSummary />
         </div>
       )}
 
@@ -44,7 +44,7 @@ function App() {
           </div>
           <EpochInfo />
           <details className="dh-disclosure" id="platform-diagnostics">
-            <summary>Platform node diagnostics</summary>
+            <summary><span>Platform node diagnostics</span></summary>
             <PlatformStatus />
           </details>
         </div>

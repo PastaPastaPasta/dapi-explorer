@@ -14,14 +14,24 @@ export function usePlatformStatus() {
   });
 }
 
-export function useEpochsInfo(start = 0, count = 5) {
+export function useCurrentEpoch() {
+  const network = useNetworkStore((s) => s.network);
+  return useQuery({
+    queryKey: ['currentEpoch', network],
+    queryFn: () => platformRead(network, (sdk) => sdk.epoch.current()),
+    refetchInterval: 15000,
+  });
+}
+
+export function useEpochsInfo(start: number | undefined, count = 10) {
   const network = useNetworkStore((s) => s.network);
 
   return useQuery({
     queryKey: ['epochsInfo', network, start, count],
+    enabled: start !== undefined,
     queryFn: () => platformRead(network, async (sdk) => {
-      const epochs = await sdk.epoch.epochsInfo({ startEpoch: start, count, ascending: true });
-      return { epochsInfo: [...epochs.values()].filter((epoch) => epoch !== undefined) };
+      const epochs = await sdk.epoch.epochsInfo({ startEpoch: start, count, ascending: false });
+      return { epochsInfo: [...epochs.values()].filter((epoch) => epoch !== undefined).sort((a, b) => b.index - a.index) };
     }),
   });
 }

@@ -15,7 +15,6 @@ summary { cursor: pointer; color: var(--dh-brand-ink); }
 .console-tabs { margin-bottom: 24px; flex-wrap: wrap; }
 .console-tabs a { padding-block: 12px; min-height: 44px; }
 .dh-stat__value.stat-text { font-size: 14px; font-weight: 400; line-height: 1.5; overflow-wrap: anywhere; }
-.stat-number { font-size: clamp(19px, 2.1vw, 26px); }
 .stat-amount { display: inline-block; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
 .stat-unit { display: inline; font-size: 13px; font-weight: 400; color: var(--dh-ink-2); }
 .stat-exact { display: block; margin-top: 8px; font-size: 12px; font-weight: 400; line-height: 1.6; color: var(--dh-ink-2); }
@@ -25,10 +24,23 @@ summary { cursor: pointer; color: var(--dh-brand-ink); }
 
 .node-verdict { font-size: 15px; margin-bottom: 18px; color: var(--dh-ink-2); }
 .node-verdict--warn { color: var(--dh-warn); }
-.node-facts { font: 14px/1.6 var(--dh-mono); }
+.node-facts { font: 14px/1.6 var(--dh-font); }
 .node-facts > div { display: grid; grid-template-columns: minmax(110px, 1fr) minmax(0, 2fr); gap: 12px; padding-block: 8px; border-bottom: 1px solid var(--dh-line); }
 .node-facts dt { color: var(--dh-ink-2); }
-.node-facts dd { overflow-wrap: anywhere; min-width: 0; }
-.node-key-stats { display: flex; flex-wrap: wrap; gap: 16px; }
-.node-key-stats > * { flex: 1 1 180px; min-width: 0; }
-.stat-number { font-size: 28px; }
+.node-facts dd { overflow-wrap: anywhere; min-width: 0; font-variant-numeric: tabular-nums; }
+.node-key-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.node-key-stats .dh-stat { padding: 12px; }
+.dh-meta .read-age { column-gap: 4px; }
+.dh-input--mono::placeholder { font-family: var(--dh-font); }
+.console-source, .core-summary { font-size: 13px; color: var(--dh-ink-2); }
+.epoch-list { list-style: none; padding: 0; margin: 0; }
+.epoch-list > li { padding-block: 14px; border-bottom: 1px solid var(--dh-line); font-variant-numeric: tabular-nums; }
+.epoch-list .dh-meta { font-size: 14px; }
+@media (max-width: 640px) {
+  .console-header { gap: 8px; margin-bottom: 16px; }
+  .console-header .dh-page-header__lede { line-height: 1.4; }
+  .node-key-stats { gap: 8px; }
+  .node-key-stats .dh-stat { padding: 8px; }
+  .node-key-stats .dh-stat__value { font-size: 16px; font-stretch: 100%; }
+  .node-verdict { margin-bottom: 12px; }
+}

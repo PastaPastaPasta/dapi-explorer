@@ -1,19 +1,25 @@
+import { useUrlParam } from "../../lib/location";
 import { ReadError, Reading } from "../../components/ReadState";
 import { Card, Stat } from "../../components/Card";
 import { JsonView } from "../../components/JsonView";
 import {
   useEpochsInfo,
+  useCurrentEpoch,
   useConsensusParams,
 } from "../../hooks/usePlatformStatus";
 import { formatNumber, formatTimestamp, formatBytes } from "../../lib/format";
 
 export function EpochInfo() {
+  const [page, setPage] = useUrlParam('epoch');
+  const { data: currentEpoch, isLoading: currentLoading, error: currentError, refetch: retryCurrent } = useCurrentEpoch();
+  const requested = /^\d+$/.test(page) && Number.isSafeInteger(Number(page)) ? Number(page) : undefined;
+  const start = currentEpoch ? Math.min(requested ?? currentEpoch.index, currentEpoch.index) : undefined;
   const {
     data: epochsData,
     isLoading: epochsLoading,
     error: epochsError,
     refetch: retryEpochs,
-  } = useEpochsInfo(0, 10);
+  } = useEpochsInfo(start);
   const {
     data: consensusParams,
     isFetching: paramsLoading,
@@ -21,8 +27,10 @@ export function EpochInfo() {
     refetch: retryParams,
   } = useConsensusParams(false);
 
-  // Check if consensus params have expected structure
   const hasConsensusStructure = consensusParams?.block?.maxBytes !== undefined;
+
+  const epochs = epochsData?.epochsInfo ?? [];
+  const earliest = epochs[epochs.length - 1]?.index;
 
   return (
     <Card title="Epochs and consensus">
@@ -35,8 +43,39 @@ export function EpochInfo() {
             onRetry={() => void retryEpochs()}
           />
         )}
+        <section aria-label="Recent epochs">
+          <h3 className="dh-h3 mb-3">Recent epochs</h3>
+          <p className="dh-sources mb-3">Source: Platform epoch records, newest first. Not proof-checked.</p>
+          {currentLoading && <Reading subject="the current epoch" />}
+          {currentError && <ReadError error={currentError} subject="the current epoch" onRetry={() => void retryCurrent()} />}
+          {epochs.length > 0 && (
+            <>
+              <ol className="epoch-list">
+                {epochs.map((epoch) => (
+                  <li key={epoch.index}>
+                    <p className="dh-meta mb-2">
+                      <strong>Epoch #{epoch.index}</strong>
+                      {epoch.index === currentEpoch?.index && <span className="dh-badge dh-badge--info">Current epoch</span>}
+                    </p>
+                    <p className="dh-meta">
+                      <span>Start block {epoch.firstBlockHeight != null ? formatNumber(epoch.firstBlockHeight) : 'Not reported'}</span>
+                      <span>Core block {epoch.firstCoreBlockHeight != null ? formatNumber(epoch.firstCoreBlockHeight) : 'Not reported'}</span>
+                      <span>Start time {epoch.firstBlockTime != null ? formatTimestamp(epoch.firstBlockTime, 'milliseconds') : 'Not reported'}</span>
+                      <span>Fee multiplier {epoch.feeMultiplier?.toFixed?.(4) ?? 'Not reported'}</span>
+                    </p>
+                  </li>
+                ))}
+              </ol>
+              <div className="dh-actions mt-4">
+                {earliest !== undefined && earliest > 0 && <button className="dh-btn" onClick={() => setPage(String(earliest - 1))}>Show earlier</button>}
+                {requested !== undefined && <button className="dh-btn" onClick={() => setPage('')}>Back to latest</button>}
+              </div>
+            </>
+          )}
+          {!currentLoading && !currentError && !epochsLoading && !epochsError && epochsData && epochs.length === 0 && <p>No epochs returned by this node.</p>}
+        </section>
         <details className="dh-disclosure">
-          <summary>Advanced · legacy consensus parameters</summary>
+          <summary><span>Advanced: legacy consensus parameters</span></summary>
           <p className="text-sm text-gray-500">
             Current nodes expose consensus version and sync state in Platform
             status. The legacy consensus-parameters endpoint may be unavailable.
@@ -100,75 +139,6 @@ export function EpochInfo() {
             </div>
           )}
         </details>
-
-        {epochsData?.epochsInfo && epochsData.epochsInfo.length > 0 && (
-          <div>
-            <h3 className="dh-h3 mb-3">Epochs from genesis</h3>
-            <div className="border border-gray-200 rounded overflow-hidden">
-              <table className="dh-table dh-table--cards">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-3 py-2 text-left font-medium text-gray-600">
-                      Epoch
-                    </th>
-                    <th className="px-3 py-2 text-left font-medium text-gray-600">
-                      Start block
-                    </th>
-                    <th className="px-3 py-2 text-left font-medium text-gray-600">
-                      Core block
-                    </th>
-                    <th className="px-3 py-2 text-left font-medium text-gray-600">
-                      Start time
-                    </th>
-                    <th className="px-3 py-2 text-left font-medium text-gray-600">
-                      Fee multiplier
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {epochsData.epochsInfo.map((epoch, idx) => (
-                    <tr key={epoch?.index ?? idx} className="hover:bg-gray-50">
-                      <td data-label="Epoch" className="dh-rc-title">
-                        {epoch?.index ?? "— · Not reported by this node"}
-                      </td>
-                      <td
-                        data-label="Start block"
-                        className="px-3 py-2 font-mono text-xs"
-                      >
-                        {epoch?.firstBlockHeight != null
-                          ? formatNumber(epoch.firstBlockHeight)
-                          : "— · Not reported by this node"}
-                      </td>
-                      <td
-                        data-label="Core block"
-                        className="px-3 py-2 font-mono text-xs"
-                      >
-                        {epoch?.firstCoreBlockHeight != null
-                          ? formatNumber(epoch.firstCoreBlockHeight)
-                          : "— · Not reported by this node"}
-                      </td>
-                      <td
-                        data-label="Start time"
-                        className="px-3 py-2 text-gray-600 text-xs"
-                      >
-                        {epoch?.firstBlockTime != null
-                          ? formatTimestamp(
-                              epoch.firstBlockTime,
-                              "milliseconds",
-                            )
-                          : "— · Not reported by this node"}
-                      </td>
-                      <td data-label="Fee multiplier" className="px-3 py-2">
-                        {epoch?.feeMultiplier?.toFixed?.(4) ??
-                          "— · Not reported by this node"}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
       </div>
     </Card>
   );

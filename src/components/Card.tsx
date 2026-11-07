@@ -14,7 +14,7 @@ export function Card({ title, children, className = '', loading, error, onRetry 
   return (
     <div className={`dh-card dh-card--flush ${className}`}>
       <div className="dh-card__head">
-        <h2 className="dh-card__title">{title}</h2>
+        <h2 className="dh-h3">{title}</h2>
       </div>
       <div className="px-4 pb-4 md:px-5">
         {loading ? (

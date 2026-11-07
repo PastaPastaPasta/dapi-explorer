@@ -51,7 +51,7 @@ export function TransactionLookup() {
           />
           <button
             type="submit"
-            className="dh-btn"
+            className="dh-btn dh-btn--primary"
           >
             Look up transaction
           </button>

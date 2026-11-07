@@ -64,7 +64,7 @@ export function DataContractViewer() {
           />
           <button
             type="submit"
-            className="dh-btn"
+            className="dh-btn dh-btn--primary"
           >
             Fetch contract
           </button>
@@ -73,7 +73,7 @@ export function DataContractViewer() {
       </form>
 
       <div className="mb-4">
-        <p className="text-xs text-gray-500 mb-2">Known contracts (click to load):</p>
+        <p className="text-xs text-gray-500 mb-2">Known contracts:</p>
         <div className="flex flex-wrap gap-2">
           {KNOWN_CONTRACTS.map((contract) => (
             <button

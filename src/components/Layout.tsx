@@ -72,14 +72,8 @@ export function Layout({
         </nav>
       </dashhq-bar>
       <main id="main" className="dh-container dh-page">
-        <p className="dh-crumbs">
-          <a href={window.dashhq.href("explorer", "/tools/", { network })}>
-            Explorer
-          </a>
-          <span>DAPI console</span>
-        </p>
-        <header className="dh-page-header">
-          <h1 className="dh-page-header__title">
+        <header className="dh-page-header console-header">
+          <h1 className="dh-h1">
             {activeTab === "dashboard"
               ? "Read a node’s status"
               : activeTab === "core"
@@ -97,8 +91,8 @@ export function Layout({
                   ? "Read an identity, contract or epoch from the selected network."
                   : "Watch the latest block height as this node reports it."}
           </p>
-          <p className="dh-sources">
-            Source: DAPI nodes · Read-only · Not proof-checked.{" "}
+          <p className="dh-meta console-source">
+            <span>Source: DAPI nodes</span><span>Read-only</span><span>Not proof-checked</span>
             <a href={window.dashhq.href("explorer", "/", { network })}>
               Verify records in Explorer →
             </a>

@@ -59,7 +59,7 @@ export function PlatformStatus() {
               className="dh-sources mb-4"
               aria-label="Platform response source"
             >
-              <p>Source: Platform node · Not proof-checked</p>
+              <p className="dh-meta"><span>Source: Platform node</span><span>Not proof-checked</span></p>
               <p>
                 Responding node:{" "}
                 <HashValue
@@ -83,8 +83,8 @@ export function PlatformStatus() {
                   See network-wide health in Radar →
                 </a>
               </p>
-              <p className="text-xs text-gray-500 mt-2">
-                Read · <Freshness value={dataUpdatedAt} /> · SDK 5.0.0-rc.8
+              <p className="dh-meta mt-2">
+                <span className="read-age">Read <Freshness value={dataUpdatedAt} /></span><span>SDK 5.0.0-rc.8</span>
               </p>
             </div>
           )}
@@ -114,85 +114,88 @@ export function PlatformStatus() {
               }
             />
           </dl>
-          <dl className="node-facts">
-            <div>
-              <dt>DAPI</dt>
-              <dd>{String(software?.dapi ?? "Not reported")}</dd>
-            </div>
-            <div>
-              <dt>Drive</dt>
-              <dd>{String(software?.drive ?? "Not reported")}</dd>
-            </div>
-            <div>
-              <dt>Tenderdash</dt>
-              <dd>
-                <HashValue
-                  value={
-                    software?.tenderdash
-                      ? String(software.tenderdash)
-                      : undefined
-                  }
-                  label="Tenderdash build"
-                  full
-                />
-              </dd>
-            </div>
-            <div>
-              <dt>Protocol</dt>
-              <dd>
-                {s.version?.protocol?.drive?.current != null
-                  ? `v${s.version.protocol.drive.current}`
-                  : "Not reported"}
-              </dd>
-            </div>
-            <div>
-              <dt>Chain ID</dt>
-              <dd>{String(network?.chain_id ?? "Not reported")}</dd>
-            </div>
-            <div>
-              <dt>Listening</dt>
-              <dd>
-                {network?.isListening === undefined
-                  ? "Not reported"
-                  : network.isListening
-                    ? "Yes"
-                    : "No"}
-              </dd>
-            </div>
-            <div>
-              <dt>Latest block</dt>
-              <dd>
-                <HashValue
-                  value={chain?.latest_block_hash}
-                  label="Latest Platform block hash"
-                />
-              </dd>
-            </div>
-            <div>
-              <dt>Max peer height</dt>
-              <dd>
-                {chain?.max_peer_block_height != null
-                  ? formatNumber(String(chain.max_peer_block_height))
-                  : "Not reported"}
-              </dd>
-            </div>
-            <div>
-              <dt>Node ID</dt>
-              <dd>
-                <HashValue value={node?.id} label="Platform node ID" />
-              </dd>
-            </div>
-            <div>
-              <dt>ProTx hash</dt>
-              <dd>
-                <HashValue value={proTxHash} label="Node ProTx hash" />
-              </dd>
-            </div>
-            <div>
-              <dt>Current epoch</dt>
-              <dd>{String(time?.epoch ?? "Not reported")}</dd>
-            </div>
-          </dl>
+          <details className="dh-disclosure">
+            <summary><span>Platform node details</span></summary>
+            <dl className="node-facts mt-3">
+              <div>
+                <dt>DAPI</dt>
+                <dd>{String(software?.dapi ?? "Not reported")}</dd>
+              </div>
+              <div>
+                <dt>Drive</dt>
+                <dd>{String(software?.drive ?? "Not reported")}</dd>
+              </div>
+              <div>
+                <dt>Tenderdash</dt>
+                <dd>
+                  <HashValue
+                    value={
+                      software?.tenderdash
+                        ? String(software.tenderdash)
+                        : undefined
+                    }
+                    label="Tenderdash build"
+                    full
+                  />
+                </dd>
+              </div>
+              <div>
+                <dt>Protocol</dt>
+                <dd>
+                  {s.version?.protocol?.drive?.current != null
+                    ? `v${s.version.protocol.drive.current}`
+                    : "Not reported"}
+                </dd>
+              </div>
+              <div>
+                <dt>Chain ID</dt>
+                <dd>{String(network?.chain_id ?? "Not reported")}</dd>
+              </div>
+              <div>
+                <dt>Listening</dt>
+                <dd>
+                  {network?.isListening === undefined
+                    ? "Not reported"
+                    : network.isListening
+                      ? "Yes"
+                      : "No"}
+                </dd>
+              </div>
+              <div>
+                <dt>Latest block</dt>
+                <dd>
+                  <HashValue
+                    value={chain?.latest_block_hash}
+                    label="Latest Platform block hash"
+                  />
+                </dd>
+              </div>
+              <div>
+                <dt>Max peer height</dt>
+                <dd>
+                  {chain?.max_peer_block_height != null
+                    ? formatNumber(String(chain.max_peer_block_height))
+                    : "Not reported"}
+                </dd>
+              </div>
+              <div>
+                <dt>Node ID</dt>
+                <dd>
+                  <HashValue value={node?.id} label="Platform node ID" />
+                </dd>
+              </div>
+              <div>
+                <dt>ProTx hash</dt>
+                <dd>
+                  <HashValue value={proTxHash} label="Node ProTx hash" />
+                </dd>
+              </div>
+              <div>
+                <dt>Current epoch</dt>
+                <dd>{String(time?.epoch ?? "Not reported")}</dd>
+              </div>
+            </dl>
+          </details>
           {!creditsLoading && !creditsError && (
             <dl className="dh-stats">
               <BalanceStat
@@ -211,7 +214,7 @@ export function PlatformStatus() {
             />
           )}
           <details className="dh-disclosure">
-            <summary>Raw node response</summary>
+            <summary><span>Raw node response</span></summary>
             <JsonView data={s.toJSON()} />
           </details>
         </div>
