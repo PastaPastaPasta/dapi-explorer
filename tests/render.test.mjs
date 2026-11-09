@@ -147,7 +147,7 @@ test('epoch rendering marks current and bounds older pages without falling back 
   assert.doesNotMatch(failed, /Current epoch<|Epoch #0/);
 });
 
-const { CoreSummary } = await import(moduleUrl(new URL('../src/features/core/BlockchainStatus.tsx', import.meta.url), {
+const { CoreSummary, BlockchainStatus } = await import(moduleUrl(new URL('../src/features/core/BlockchainStatus.tsx', import.meta.url), {
   '../../hooks/useBlockchainStatus': 'export const useBlockchainStatus = () => globalThis.coreSummaryState;',
   '../../store/network': "export const useNetworkStore = select => select({ network: 'testnet' });",
 }));
@@ -167,4 +167,27 @@ test('compact Core status retains source and freshness on failed refreshes witho
   assert.match(stale, /showing the last successful read/);
   assert.match(stale, /tab=dashboard/);
   assert.match(stale, /network=testnet/);
+});
+
+test('dashboard exposes the complete Core status record while keeping raw data folded', () => {
+  globalThis.coreSummaryState = { data: {
+    status: {
+      status: 'ERROR',
+      chain: { name: 'mainnet', syncProgress: 1, blocksCount: 0, headersCount: 0, difficulty: 0, bestBlockHash: 'a'.repeat(64) },
+      network: { peersCount: 0 },
+      version: { protocol: 70230, agent: '/Dash Core:23.0.1/' },
+    },
+    source: 'node:1443', readAt: Date.now(),
+  } };
+  const html = render(BlockchainStatus);
+  const folded = html.indexOf('<details');
+  assert.ok(folded > 0);
+  for (const label of ['Chain', 'Status', 'Sync progress', 'Block height', 'Headers', 'Peers', 'Protocol version', 'Difficulty', 'Agent', 'Best block hash']) {
+    const position = html.indexOf(`<dt>${label}</dt>`);
+    assert.ok(position >= 0 && position < folded, `${label} must be exposed by default`);
+  }
+  assert.match(html, /Node reports ERROR while reporting 100% sync/);
+  assert.match(html, /<dd>0<\/dd>/);
+  assert.match(html, /Raw node response/);
+  assert.doesNotMatch(html, /<details[^>]*\bopen\b|Core node details/);
 });

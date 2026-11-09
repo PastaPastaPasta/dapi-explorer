@@ -1,5 +1,5 @@
 import { HashValue } from "../../components/HashValue";
-import { Card, Stat } from "../../components/Card";
+import { Card } from "../../components/Card";
 import { JsonView } from "../../components/JsonView";
 import { useBlockchainStatus } from "../../hooks/useBlockchainStatus";
 import { formatNumber, formatPercent } from "../../lib/format";
@@ -63,69 +63,71 @@ export function BlockchainStatus() {
               </p>
             </div>
           )}
-          <dl className="dh-stats node-key-stats">
-            <Stat
-              label="Block height"
-              value={
-                status.chain?.blocksCount !== undefined
+          <dl className="node-facts">
+            <div>
+              <dt>Chain</dt>
+              <dd>{status.chain?.name ?? "Not reported"}</dd>
+            </div>
+            <div>
+              <dt>Status</dt>
+              <dd>{status.status ?? "Not reported"}</dd>
+            </div>
+            <div>
+              <dt>Sync progress</dt>
+              <dd>
+                {status.chain?.syncProgress !== undefined
+                  ? formatPercent(status.chain.syncProgress)
+                  : "Not reported"}
+              </dd>
+            </div>
+            <div>
+              <dt>Block height</dt>
+              <dd>
+                {status.chain?.blocksCount !== undefined
                   ? formatNumber(status.chain.blocksCount)
-                  : "N/A"
-              }
-            />
-            <Stat
-              label="Headers"
-              value={
-                status.chain?.headersCount !== undefined
+                  : "Not reported"}
+              </dd>
+            </div>
+            <div>
+              <dt>Headers</dt>
+              <dd>
+                {status.chain?.headersCount !== undefined
                   ? formatNumber(status.chain.headersCount)
-                  : "N/A"
-              }
-            />
-            <Stat label="Peers" value={status.network?.peersCount ?? "N/A"} />
+                  : "Not reported"}
+              </dd>
+            </div>
+            <div>
+              <dt>Peers</dt>
+              <dd>{status.network?.peersCount ?? "Not reported"}</dd>
+            </div>
+            <div>
+              <dt>Protocol version</dt>
+              <dd>{status.version?.protocol ?? "Not reported"}</dd>
+            </div>
+            <div>
+              <dt>Difficulty</dt>
+              <dd>
+                {status.chain?.difficulty !== undefined
+                  ? status.chain.difficulty.toLocaleString("en-US", {
+                      maximumSignificantDigits: 5,
+                    })
+                  : "Not reported"}
+              </dd>
+            </div>
+            <div>
+              <dt>Agent</dt>
+              <dd>{status.version?.agent ?? "Not reported"}</dd>
+            </div>
+            <div>
+              <dt>Best block hash</dt>
+              <dd>
+                <HashValue
+                  value={status.chain?.bestBlockHash}
+                  label="Best block hash"
+                />
+              </dd>
+            </div>
           </dl>
-          <details className="dh-disclosure mt-4">
-            <summary><span>Core node details</span></summary>
-            <dl className="node-facts mt-3">
-              <div>
-                <dt>Chain</dt>
-                <dd>{status.chain?.name ?? "Not reported"}</dd>
-              </div>
-              <div>
-                <dt>Sync progress</dt>
-                <dd>
-                  {status.chain?.syncProgress !== undefined
-                    ? formatPercent(status.chain.syncProgress)
-                    : "Not reported"}
-                </dd>
-              </div>
-              <div>
-                <dt>Protocol</dt>
-                <dd>{status.version?.protocol ?? "Not reported"}</dd>
-              </div>
-              <div>
-                <dt>Difficulty</dt>
-                <dd>
-                  {status.chain?.difficulty !== undefined
-                    ? status.chain.difficulty.toLocaleString("en-US", {
-                        maximumSignificantDigits: 5,
-                      })
-                    : "Not reported"}
-                </dd>
-              </div>
-              <div>
-                <dt>Agent</dt>
-                <dd>{status.version?.agent ?? "Not reported"}</dd>
-              </div>
-              <div>
-                <dt>Best block</dt>
-                <dd>
-                  <HashValue
-                    value={status.chain?.bestBlockHash}
-                    label="Best block hash"
-                  />
-                </dd>
-              </div>
-            </dl>
-          </details>
         </>
       )}
       {status && (
