@@ -9,7 +9,7 @@ export function Dashboard() {
         <BlockchainStatus />
         <PlatformStatus />
       </div>
-      <BlockStream ticker autoStart />
+      <BlockStream ticker />
     </div>
   );
 }
