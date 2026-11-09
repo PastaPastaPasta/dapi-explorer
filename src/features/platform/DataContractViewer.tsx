@@ -48,7 +48,7 @@ export function DataContractViewer() {
   };
 
   return (
-    <Card title="Data contract">
+    <Card title="Data contract" method="contracts.fetch">
       <form onSubmit={handleSubmit} className="dh-field mb-4">
         <label className="dh-field__label" htmlFor="contract-input">Contract ID (base58 or hex)</label>
         <div className="dh-inline-form">

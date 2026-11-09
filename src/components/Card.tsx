@@ -3,6 +3,7 @@ import { Reading, ReadError } from './ReadState';
 
 interface CardProps {
   title: string;
+  method?: string;
   children: React.ReactNode;
   className?: string;
   loading?: boolean;
@@ -10,11 +11,12 @@ interface CardProps {
   onRetry?: () => void;
 }
 
-export function Card({ title, children, className = '', loading, error, onRetry }: CardProps) {
+export function Card({ title, method, children, className = '', loading, error, onRetry }: CardProps) {
   return (
     <div className={`dh-card dh-card--flush ${className}`}>
-      <div className="dh-card__head">
-        <h2 className="dh-h3">{title}</h2>
+      <div className="dh-card__head response-head">
+        <div><h2 className="dh-h3">{title}</h2>{method && <code className="response-method">{method}</code>}</div>
+        <span className="dh-badge dh-badge--reported">Reported</span>
       </div>
       <div className="px-4 pb-4 md:px-5">
         {loading ? (

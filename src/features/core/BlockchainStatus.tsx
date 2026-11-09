@@ -16,7 +16,7 @@ export function BlockchainStatus() {
 
   return (
     <Card
-      title="Core status"
+      title="Core status" method="getBlockchainStatus"
       loading={isLoading}
       error={data ? null : error}
       onRetry={() => void refetch()}
@@ -131,10 +131,7 @@ export function BlockchainStatus() {
         </>
       )}
       {status && (
-        <details className="dh-disclosure mt-4 text-sm">
-          <summary><span>Raw node response</span></summary>
-          <JsonView data={status} />
-        </details>
+        <JsonView data={status} label="Raw node response · Details" />
       )}
     </Card>
   );

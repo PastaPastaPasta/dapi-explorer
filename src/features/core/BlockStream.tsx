@@ -5,6 +5,7 @@ import { Card } from '../../components/Card';
 import { useDapi } from '../../hooks/useDapi';
 import { useNetworkStore } from '../../store/network';
 import { useBestBlockHeight } from '../../hooks/useBlockchainStatus';
+import { headerTimestamp } from '../../lib/block-freshness';
 import { formatRelativeTime } from '../../lib/format';
 import type { BlockHeaderStream } from '@dashevo/dapi-client';
 
@@ -15,12 +16,14 @@ interface BlockHeader {
   chainLocked: boolean;
 }
 
-export function BlockStream() {
+export function BlockStream({ ticker = false, autoStart = false }: { ticker?: boolean; autoStart?: boolean }) {
   const [isStreaming, setIsStreaming] = useState(false);
   const [blocks, setBlocks] = useState<BlockHeader[]>([]);
   const [error, setError] = useState<string | null>(null);
   const streamRef = useRef<BlockHeaderStream | null>(null);
   const generation = useRef(0);
+  const autoStarted = useRef(false);
+  const [, refreshAge] = useState(0);
 
   const client = useDapi();
   const network = useNetworkStore((s) => s.network);
@@ -39,7 +42,7 @@ export function BlockStream() {
     const run = ++generation.current;
     setError(null);
     setIsStreaming(true);
-    let nextHeight = Math.max(1, currentHeight - 5);
+    let nextHeight = Math.max(1, currentHeight - (ticker ? 11 : 5));
     let chainLockHeight = 0;
     const fail = (err: Error) => {
       if (generation.current !== run) return;
@@ -64,33 +67,45 @@ export function BlockStream() {
         const firstHeight = nextHeight;
         nextHeight += headers.length;
         void Promise.all(headers.map(async (header, index) => {
-          if (header.length < 80) throw new Error('The node returned an incomplete block header.');
           const height = firstHeight + index;
           const hash = await client.core.getBlockHash(height);
-          const timestamp = new DataView(header.buffer, header.byteOffset, header.byteLength).getUint32(68, true);
+          const timestamp = headerTimestamp(header);
           return { height, hash, timestamp, chainLocked: height <= chainLockHeight };
         })).then(batch => {
           if (generation.current !== run) return;
-          setBlocks(previous => [...batch, ...previous].filter((block, index, all) => index === all.findIndex(other => other.height === block.height)).sort((a, b) => b.height - a.height).slice(0, 20));
+          setBlocks(previous => [...batch, ...previous].filter((block, index, all) => index === all.findIndex(other => other.height === block.height)).sort((a, b) => b.height - a.height).slice(0, ticker ? 12 : 20));
         }).catch(fail);
       });
     } catch (err) { fail(err instanceof Error ? err : new Error(String(err))); }
-  }, [client, currentHeight, stopStream]);
+  }, [client, currentHeight, stopStream, ticker]);
 
   useEffect(() => {
     setBlocks([]);
+    autoStarted.current = false;
     return stopStream;
   }, [network, stopStream]);
 
+  useEffect(() => {
+    if (autoStart && currentHeight && !autoStarted.current) {
+      autoStarted.current = true;
+      void startStream();
+    }
+  }, [autoStart, currentHeight, startStream]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => refreshAge(value => value + 1), 10000);
+    return () => window.clearInterval(timer);
+  }, []);
+
   return (
-    <Card title="Live block stream">
+    <Card title={ticker ? "Latest 12 Core blocks" : "Live block stream"} method="subscribeToBlockHeadersWithChainLocks" className={ticker ? 'block-ticker' : ''}>
       <div className="space-y-4">
-        <p className="text-sm text-gray-500">Newest blocks appear first.</p>
+        <p className="text-sm text-gray-500">Newest blocks first · Core headers do not include a Platform proposer.</p>
         <div className="flex items-center gap-3">
           <button
             onClick={isStreaming ? stopStream : startStream}
             disabled={!currentHeight}
-            className="dh-btn dh-btn--primary"
+            className="dh-btn"
           >
             {isStreaming ? 'Stop' : 'Start'} stream
           </button>
@@ -108,7 +123,21 @@ export function BlockStream() {
         {heightError && <ReadError error={heightError} subject="the starting block height" onRetry={() => void retryHeight()} />}
         {error && <ReadError error={new Error(error)} subject="the block stream" onRetry={() => void startStream()} />}
 
-        {blocks.length > 0 && (
+        {ticker && blocks.length > 0 && (
+          <>
+            <div className="block-ticker__labels"><span>Block height</span><span>Age · ChainLock</span></div>
+            <ol className="block-ticker__list">
+              {blocks.map(block => (
+                <li key={block.height}>
+                  <span className="block-ticker__tile" aria-hidden="true">BLK</span>
+                  <div><strong>{block.height.toLocaleString()}</strong><small>Proposer: not in Core headers</small></div>
+                  <div className="block-ticker__age">{formatRelativeTime(block.timestamp)}<small>{block.chainLocked ? 'ChainLocked' : 'No ChainLock reported'}</small></div>
+                </li>
+              ))}
+            </ol>
+          </>
+        )}
+        {!ticker && blocks.length > 0 && (
           <div className="border border-gray-200 rounded overflow-hidden">
             <table className="dh-table dh-table--cards">
               <thead className="bg-gray-50">
@@ -147,6 +176,7 @@ export function BlockStream() {
           </div>
         )}
 
+        {blocks.length === 0 && isStreaming && !error && <Reading subject="the latest block headers" />}
         {blocks.length === 0 && !isStreaming && (
           <p className="dh-empty dh-empty--inline">Start the stream to receive real-time block headers.</p>
         )}

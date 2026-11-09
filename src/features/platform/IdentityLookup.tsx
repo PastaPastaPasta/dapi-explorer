@@ -40,7 +40,7 @@ export function IdentityLookup() {
   };
 
   return (
-    <Card title="Identity lookup">
+    <Card title="Identity lookup" method="identities.fetch">
       <form onSubmit={handleSubmit} className="dh-field mb-4">
         <label className="dh-field__label" htmlFor="identity-input">Identity ID (base58 or hex)</label>
         <div className="dh-inline-form">

@@ -38,7 +38,7 @@ export function PlatformStatus() {
 
   return (
     <Card
-      title="Platform status"
+      title="Platform status" method="system.status"
       loading={isLoading}
       error={error}
       onRetry={() => void refetch()}
@@ -213,10 +213,7 @@ export function PlatformStatus() {
               onRetry={() => void retryCredits()}
             />
           )}
-          <details className="dh-disclosure">
-            <summary><span>Raw node response</span></summary>
-            <JsonView data={s.toJSON()} />
-          </details>
+          <JsonView data={s.toJSON()} label="Raw node response · Details" />
         </div>
       )}
     </Card>

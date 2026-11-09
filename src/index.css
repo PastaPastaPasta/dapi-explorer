@@ -46,3 +46,41 @@ summary { cursor: pointer; color: var(--dh-brand-ink); }
   .node-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 16px; }
   .node-facts > div { display: block; min-width: 0; padding-block: 6px; }
 }
+
+:root{--dh-tier-apps:#0A2A3D;--dh-tier-apps-ink:#CFE6F7;--dh-tier-apps-soft:#E4EBF0;--dh-tier-net:#0070C4;--dh-tier-net-ink:#FFFFFF;--dh-tier-net-soft:#E0EFFA;--dh-tier-platform:#25B8A6;--dh-tier-platform-ink:#0A2A3D;--dh-tier-platform-soft:#DCF4F1;--dh-tier-ref:#BFD9EA;--dh-tier-ref-ink:#0A3F66;--dh-tier-ref-soft:#E2E9EE}
+:root[data-theme="dark"]{--dh-tier-apps:#A6D8F7;--dh-tier-apps-ink:#0A2A3D;--dh-tier-apps-soft:#10222F;--dh-tier-net:#1A9CF0;--dh-tier-net-ink:#0A2A3D;--dh-tier-net-soft:#0D2B40;--dh-tier-platform:#25B8A6;--dh-tier-platform-ink:#0A2A3D;--dh-tier-platform-soft:#103A40;--dh-tier-ref:#1B3F5A;--dh-tier-ref-ink:#A6D8F7;--dh-tier-ref-soft:#10202C}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--dh-tier-apps:#A6D8F7;--dh-tier-apps-ink:#0A2A3D;--dh-tier-apps-soft:#10222F;--dh-tier-net:#1A9CF0;--dh-tier-net-ink:#0A2A3D;--dh-tier-net-soft:#0D2B40;--dh-tier-platform:#25B8A6;--dh-tier-platform-ink:#0A2A3D;--dh-tier-platform-soft:#103A40;--dh-tier-ref:#1B3F5A;--dh-tier-ref-ink:#A6D8F7;--dh-tier-ref-soft:#10202C}}
+
+.console-band { background: color-mix(in srgb, var(--dh-tier-platform-soft) 55%, var(--dh-page)); border-bottom: 1px solid var(--dh-line); }
+.console-heading { padding-bottom: 24px; }
+.console-band .console-header { margin-bottom: 24px; }
+.console-content { padding-top: 32px; padding-bottom: 40px; }
+.console-status-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 0; }
+.block-status { border-top: 3px solid var(--dh-line-2); background: var(--dh-surface); padding: 16px 20px; }
+.block-status .dh-stat__label { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.block-status .dh-stat__value { margin-block: 8px; font-size: 28px; overflow-wrap: anywhere; }
+.block-status--good { border-top-color: var(--dh-good); }
+.block-status--warn { border-top-color: var(--dh-warn); }
+.block-status--good .block-status__age { color: var(--dh-good); }
+.block-status--warn .block-status__age { color: var(--dh-warn); }
+.block-status__age { font-size: 15px; font-weight: 600; }
+.block-status__target { font-size: 13px; color: var(--dh-ink-2); }
+.response-head { border-left: 4px solid var(--dh-tier-platform); display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.json-head { padding: 8px 12px; margin-block: 12px; }
+.json-details > summary { padding-block: 12px; }
+.dashboard-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+.block-ticker__labels { display: flex; justify-content: space-between; gap: 12px; color: var(--dh-ink-2); font-size: 13px; padding-block: 12px; border-bottom: 1px solid var(--dh-line); }
+.block-ticker__list { list-style: none; margin: 0; padding: 0; }
+.block-ticker__list li { display: grid; grid-template-columns: 40px minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: 12px; padding-block: 12px; border-bottom: 1px solid var(--dh-line); font-variant-numeric: tabular-nums; }
+.block-ticker__tile { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 8px; background: var(--dh-tier-platform); color: var(--dh-tier-platform-ink); font-size: 14px; font-weight: 700; }
+.block-ticker__list small { display: block; color: var(--dh-ink-2); font-size: 12px; }
+.block-ticker__age { text-align: right; font-size: 14px; }
+@media (max-width: 800px) { .dashboard-grid { grid-template-columns: minmax(0, 1fr); } .block-ticker { grid-row: 1; } }
+@media (max-width: 640px) {
+  .console-status-tiles { gap: 12px; }
+  .block-status { padding: 12px; }
+  .block-status .dh-stat__value { font-size: 22px; }
+  .console-content { padding-top: 24px; }
+  .block-ticker__list li { gap: 8px; }
+}
+.response-method { display: block; color: var(--dh-ink-2); font-size: 12px; overflow-wrap: anywhere; margin-top: 4px; }

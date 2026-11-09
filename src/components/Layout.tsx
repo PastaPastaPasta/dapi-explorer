@@ -1,4 +1,5 @@
 import { useEffect, useRef, type ReactNode } from "react";
+import { StatusTiles } from "../features/dashboard/StatusTiles";
 import { useNetworkStore } from "../store/network";
 import type { DashhqNetworkEventDetail } from "../../public/dashhq/dashhq-shell";
 import type {} from "../../public/dashhq/dashhq-shell.react";
@@ -71,34 +72,39 @@ export function Layout({
           })}
         </nav>
       </dashhq-bar>
-      <main id="main" className="dh-container dh-page">
-        <header className="dh-page-header console-header">
-          <h1 className="dh-h1">
-            {activeTab === "dashboard"
-              ? "Read a node’s status"
-              : activeTab === "core"
-                ? "Inspect Core data"
-                : activeTab === "platform"
-                  ? "Look up Platform data"
-                  : "Follow new Core blocks"}
-          </h1>
-          <p className="dh-page-header__lede">
-            {activeTab === "dashboard"
-              ? "Check Core and Platform responses from a node, then inspect an identity, contract or block."
-              : activeTab === "core"
-                ? "Find a block or transaction and inspect its response."
-                : activeTab === "platform"
-                  ? "Read an identity, contract or epoch from the selected network."
-                  : "Watch the latest block height as this node reports it."}
-          </p>
-          <p className="dh-meta console-source">
-            <span>Source: DAPI nodes</span><span>Read-only</span><span>Not proof-checked</span>
-            <a href={window.dashhq.href("explorer", "/", { network })}>
-              Verify records in Explorer →
-            </a>
-          </p>
-        </header>
-        {children}
+      <main id="main" className="console-main">
+        <div className={activeTab === "dashboard" ? "console-band" : ""}>
+          <div className="dh-container dh-page console-heading">
+          <header className="dh-page-header console-header">
+            <h1 className="dh-h1">
+              {activeTab === "dashboard"
+                ? "Read a node’s status"
+                : activeTab === "core"
+                  ? "Inspect Core data"
+                  : activeTab === "platform"
+                    ? "Look up Platform data"
+                    : "Follow new Core blocks"}
+            </h1>
+            <p className="dh-page-header__lede">
+              {activeTab === "dashboard"
+                ? "Check Core and Platform responses from a node, then inspect an identity, contract or block."
+                : activeTab === "core"
+                  ? "Find a block or transaction and inspect its response."
+                  : activeTab === "platform"
+                    ? "Read an identity, contract or epoch from the selected network."
+                    : "Watch the latest block height as this node reports it."}
+            </p>
+            <p className="dh-meta console-source">
+              <span>Source: DAPI nodes</span><span>Read-only</span><span>Not proof-checked</span>
+              <a href={window.dashhq.href("explorer", "/", { network })}>
+                Verify records in Explorer →
+              </a>
+            </p>
+          </header>
+          {activeTab === "dashboard" && <StatusTiles />}
+          </div>
+        </div>
+        <div className="dh-container console-content">{children}</div>
       </main>
       <dashhq-footer
         product="dapi"

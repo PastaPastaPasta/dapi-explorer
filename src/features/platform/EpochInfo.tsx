@@ -33,7 +33,7 @@ export function EpochInfo() {
   const earliest = epochs[epochs.length - 1]?.index;
 
   return (
-    <Card title="Epochs and consensus">
+    <Card title="Epochs and consensus" method="epoch.epochsInfo">
       <div className="space-y-6">
         {epochsLoading && <Reading subject="epochs" />}
         {epochsError && (

@@ -43,7 +43,7 @@ export function BlockExplorer() {
   };
 
   return (
-    <Card title="Block lookup">
+    <Card title="Block lookup" method="getBlockByHeight / getBlockByHash">
       <form onSubmit={handleSubmit} className="dh-field mb-4">
         <label className="dh-field__label" htmlFor="block-input">Block height or hash</label>
         <div className="dh-inline-form">

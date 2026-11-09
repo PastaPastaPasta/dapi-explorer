@@ -35,7 +35,7 @@ export function TransactionLookup() {
   };
 
   return (
-    <Card title="Transaction lookup">
+    <Card title="Transaction lookup" method="getTransaction">
       <form onSubmit={handleSubmit} className="dh-field mb-4">
         <label className="dh-field__label" htmlFor="tx-input">Transaction ID (64 hexadecimal characters)</label>
         <div className="dh-inline-form">
