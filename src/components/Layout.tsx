@@ -4,6 +4,13 @@ import { useNetworkStore } from "../store/network";
 import type { DashhqNetworkEventDetail } from "../../public/dashhq/dashhq-shell";
 import type {} from "../../public/dashhq/dashhq-shell.react";
 
+const tabIcons: Record<string, string> = {
+  dashboard: "M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z",
+  core: "M12 3l9 5v8l-9 5-9-5V8z M3 8l9 5 9-5 M12 13v8",
+  platform: "M12 3l10 5-10 5L2 8z M2 12l10 5 10-5 M2 16l10 5 10-5",
+  stream: "M4 20V12 M9 20V4 M14 20V9 M19 20V2",
+};
+
 interface LayoutProps {
   children: ReactNode;
   tabs: { id: string; label: string }[];
@@ -42,6 +49,7 @@ export function Layout({
         product-href={window.dashhq.href("dapi", "/", { network })}
         network={network}
         networks="mainnet testnet"
+        phone-nav="tabs"
         sticky=""
       >
         <nav slot="nav" aria-label="DAPI console sections">
@@ -66,6 +74,11 @@ export function Layout({
                   }
                 }}
               >
+                <span className="dh-nav-icon" aria-hidden="true">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                    <path d={tabIcons[tab.id]} />
+                  </svg>
+                </span>
                 {tab.label}
               </a>
             );
