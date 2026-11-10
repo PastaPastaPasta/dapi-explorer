@@ -40,9 +40,9 @@ export function Layout({
 
   useEffect(() => {
     const preserveScroll = () => {
-      const top = window.scrollY;
+      const { scrollX: left, scrollY: top } = window;
       requestAnimationFrame(() => {
-        if (window.scrollY !== top) window.scrollTo({ top, left: 0, behavior: "instant" });
+        window.scrollTo({ top, left, behavior: "instant" });
       });
     };
     document.addEventListener("dashhq-theme", preserveScroll);
