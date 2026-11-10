@@ -4,7 +4,7 @@ export async function withDeadline<T>(request: Promise<T>, timeoutMs = 18000): P
     return await Promise.race([
       request,
       new Promise<never>((_, reject) => {
-        timer = setTimeout(() => reject(new Error('The node did not answer within 18 seconds. Retry to discover another node.')), timeoutMs);
+        timer = setTimeout(() => reject(new Error(`The node did not answer within ${Math.round(timeoutMs / 1000)} seconds. Retry to discover another node.`)), timeoutMs);
       }),
     ]);
   } finally {

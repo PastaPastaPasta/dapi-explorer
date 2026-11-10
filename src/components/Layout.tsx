@@ -38,6 +38,17 @@ export function Layout({
     return () => element.removeEventListener("dashhq-network", change);
   }, [setNetwork]);
 
+  useEffect(() => {
+    const preserveScroll = () => {
+      const top = window.scrollY;
+      requestAnimationFrame(() => {
+        if (window.scrollY !== top) window.scrollTo({ top, left: 0, behavior: "instant" });
+      });
+    };
+    document.addEventListener("dashhq-theme", preserveScroll);
+    return () => document.removeEventListener("dashhq-theme", preserveScroll);
+  }, []);
+
   return (
     <>
       <a className="skip-link" href="#main">

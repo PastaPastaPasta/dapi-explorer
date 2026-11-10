@@ -43,11 +43,12 @@ export function EpochInfo() {
             onRetry={() => void retryEpochs()}
           />
         )}
+        {currentLoading && <Reading subject="the current epoch" />}
+        {currentError && <ReadError error={currentError} subject="the current epoch" onRetry={() => void retryCurrent()} />}
+        {!currentError && !epochsError && !currentLoading && !epochsLoading && (
         <section aria-label="Recent epochs">
           <h3 className="dh-h3 mb-3">Recent epochs</h3>
           <p className="dh-sources mb-3">Source: Platform epoch records, newest first. Not proof-checked.</p>
-          {currentLoading && <Reading subject="the current epoch" />}
-          {currentError && <ReadError error={currentError} subject="the current epoch" onRetry={() => void retryCurrent()} />}
           {epochs.length > 0 && (
             <>
               <ol className="epoch-list">
@@ -74,6 +75,7 @@ export function EpochInfo() {
           )}
           {!currentLoading && !currentError && !epochsLoading && !epochsError && epochsData && epochs.length === 0 && <p>No epochs returned by this node.</p>}
         </section>
+        )}
         <details className="dh-disclosure">
           <summary><span>Advanced: legacy consensus parameters</span></summary>
           <p className="text-sm text-gray-500">

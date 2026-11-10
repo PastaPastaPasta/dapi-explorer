@@ -21,6 +21,7 @@ summary { cursor: pointer; color: var(--dh-brand-ink); }
 
 #root { min-height: 100vh; display: flex; flex-direction: column; }
 #main { flex: 1; }
+.console-main { padding-bottom: var(--dh-tabs-h, 0px); }
 
 .node-verdict { font-size: 15px; margin-bottom: 18px; color: var(--dh-ink-2); }
 .node-verdict--warn { color: var(--dh-warn); }

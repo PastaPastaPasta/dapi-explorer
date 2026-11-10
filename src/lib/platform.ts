@@ -4,7 +4,7 @@ import { withDeadline } from './request';
 
 const sessions = new Map<NetworkType, Promise<EvoSDK>>();
 
-export async function platformRead<T>(network: NetworkType, read: (sdk: EvoSDK) => Promise<T>): Promise<T> {
+export async function platformRead<T>(network: NetworkType, read: (sdk: EvoSDK) => Promise<T>, timeoutMs = 18000): Promise<T> {
   let session = sessions.get(network);
   if (!session) {
     const sdk = new EvoSDK({
@@ -16,7 +16,7 @@ export async function platformRead<T>(network: NetworkType, read: (sdk: EvoSDK) 
     sessions.set(network, session);
   }
   try {
-    return await withDeadline(session.then(read));
+    return await withDeadline(session.then(read), timeoutMs);
   } catch (error) {
     if (sessions.get(network) === session) sessions.delete(network);
     throw error;
