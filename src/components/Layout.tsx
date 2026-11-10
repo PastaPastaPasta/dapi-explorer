@@ -39,14 +39,34 @@ export function Layout({
   }, [setNetwork]);
 
   useEffect(() => {
+    const element = bar.current!;
+    let themeScroll: { left: number; top: number } | null = null;
+    const rememberThemeScroll = (event: Event) => {
+      if (event.composedPath().some((target) => target instanceof Element && target.getAttribute("aria-controls") === "dh-theme")) {
+        themeScroll = { left: window.scrollX, top: window.scrollY };
+      }
+    };
+    const forgetThemeScroll = () => { themeScroll = null; };
     const preserveScroll = () => {
-      const { scrollX: left, scrollY: top } = window;
+      const open = element.shadowRoot?.querySelector('[aria-controls="dh-theme"]')?.getAttribute("aria-expanded") === "true";
+      const { left, top } = open && themeScroll ? themeScroll : { left: window.scrollX, top: window.scrollY };
+      themeScroll = null;
       requestAnimationFrame(() => {
         window.scrollTo({ top, left, behavior: "instant" });
       });
     };
+    element.addEventListener("pointerdown", rememberThemeScroll);
+    element.addEventListener("keydown", rememberThemeScroll);
+    window.addEventListener("wheel", forgetThemeScroll, { passive: true });
+    window.addEventListener("touchmove", forgetThemeScroll, { passive: true });
     document.addEventListener("dashhq-theme", preserveScroll);
-    return () => document.removeEventListener("dashhq-theme", preserveScroll);
+    return () => {
+      element.removeEventListener("pointerdown", rememberThemeScroll);
+      element.removeEventListener("keydown", rememberThemeScroll);
+      window.removeEventListener("wheel", forgetThemeScroll);
+      window.removeEventListener("touchmove", forgetThemeScroll);
+      document.removeEventListener("dashhq-theme", preserveScroll);
+    };
   }, []);
 
   return (
