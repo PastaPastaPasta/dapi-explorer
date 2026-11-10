@@ -19,7 +19,7 @@ export function useCurrentEpoch() {
   return useQuery({
     queryKey: ['currentEpoch', network],
     queryFn: () => platformRead(network, (sdk) => sdk.epoch.current(), 10000),
-    refetchInterval: 15000,
+    refetchInterval: (query) => query.state.status === 'error' ? false : 15000,
   });
 }
 

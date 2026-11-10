@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Freshness } from "./Freshness";
 import { useNetworkStore } from "../store/network";
 
@@ -50,10 +50,16 @@ export function ReadError({
 }
 
 export function Reading({ subject }: { subject: string }) {
+  const [slow, setSlow] = useState(false);
+  useEffect(() => {
+    setSlow(false);
+    const timer = setTimeout(() => setSlow(true), 4000);
+    return () => clearTimeout(timer);
+  }, [subject]);
   return (
     <p className="dh-loading" role="status">
       <span className="dh-spin" aria-hidden="true" />
-      Reading {subject} from a node…
+      {slow ? `Still reading ${subject} from the network… Other queries remain usable.` : `Reading ${subject} from a node…`}
     </p>
   );
 }
