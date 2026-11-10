@@ -56,13 +56,13 @@ export function Layout({
       });
     };
     element.addEventListener("pointerdown", rememberThemeScroll);
-    element.addEventListener("keydown", rememberThemeScroll);
+    element.addEventListener("keydown", rememberThemeScroll, true);
     window.addEventListener("wheel", forgetThemeScroll, { passive: true });
     window.addEventListener("touchmove", forgetThemeScroll, { passive: true });
     document.addEventListener("dashhq-theme", preserveScroll);
     return () => {
       element.removeEventListener("pointerdown", rememberThemeScroll);
-      element.removeEventListener("keydown", rememberThemeScroll);
+      element.removeEventListener("keydown", rememberThemeScroll, true);
       window.removeEventListener("wheel", forgetThemeScroll);
       window.removeEventListener("touchmove", forgetThemeScroll);
       document.removeEventListener("dashhq-theme", preserveScroll);
