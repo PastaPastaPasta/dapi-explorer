@@ -61,7 +61,7 @@ export function BlockStream() {
       stream.on('data', (response) => {
         if (abortRef.current) return;
         const lock = response.getChainLock_asU8();
-        if (lock.length >= 4) {
+        if (lock.length === 132) {
           chainLockHeight = Math.max(chainLockHeight, new DataView(lock.buffer, lock.byteOffset).getUint32(0, true));
           setBlocks((prev) => prev.map((b) => ({ ...b, chainLocked: b.height <= chainLockHeight })));
         }

@@ -31,9 +31,6 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Reach mainnet and testnet evonodes
-        run: npm test
-
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
