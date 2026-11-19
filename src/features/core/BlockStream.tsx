@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import type { BlockHeadersStream } from '@dashevo/dapi-client';
 import { Card } from '../../components/Card';
 import { useDapi } from '../../hooks/useDapi';
 import { useNetworkStore } from '../../store/network';
@@ -16,16 +17,17 @@ export function BlockStream() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [blocks, setBlocks] = useState<BlockHeader[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const streamRef = useRef<AsyncIterable<unknown> | null>(null);
-  const abortRef = useRef(false);
+  const streamRef = useRef<BlockHeadersStream | null>(null);
+  const sessionRef = useRef(0);
 
   const client = useDapi();
   const network = useNetworkStore((s) => s.network);
   const { data: currentHeight } = useBestBlockHeight();
 
   const stopStream = useCallback(() => {
-    abortRef.current = true;
+    sessionRef.current++;
     setIsStreaming(false);
+    streamRef.current?.cancel();
     streamRef.current = null;
   }, []);
 
@@ -34,60 +36,72 @@ export function BlockStream() {
 
     setError(null);
     setIsStreaming(true);
-    abortRef.current = false;
+    const session = ++sessionRef.current;
+    const active = () => sessionRef.current === session;
+
+    const fail = (err: Error) => {
+      if (!active()) return;
+      sessionRef.current++;
+      streamRef.current?.cancel();
+      streamRef.current = null;
+      setError(err.message);
+      setIsStreaming(false);
+    };
 
     try {
-      const fromHeight = Math.max(1, currentHeight - 5);
+      let nextHeight = Math.max(1, currentHeight - 5);
+      let chainLockHeight = 0;
       const stream = await client.core.subscribeToBlockHeadersWithChainLocks({
-        fromBlockHeight: fromHeight,
+        fromBlockHeight: nextHeight,
         count: 0,
       });
-
+      if (!active()) {
+        stream.cancel();
+        return;
+      }
       streamRef.current = stream;
-
-      for await (const response of stream) {
-        if (abortRef.current) break;
-
-        const res = response as {
-          blockHeaders?: Array<{
-            hash: Uint8Array;
-            height: number;
-            timestamp: number;
-          }>;
-          chainLock?: { height: number };
-        };
-
-        if (res.blockHeaders) {
-          const newBlocks = res.blockHeaders.map((header) => ({
-            height: header.height,
-            hash: Array.from(header.hash)
-              .map((b) => b.toString(16).padStart(2, '0'))
-              .join(''),
-            timestamp: header.timestamp,
-            chainLocked: res.chainLock ? res.chainLock.height >= header.height : false,
-          }));
-
-          setBlocks((prev) => {
-            const combined = [...newBlocks, ...prev];
-            const unique = combined.filter(
-              (block, index, self) =>
-                index === self.findIndex((b) => b.height === block.height)
-            );
-            return unique.sort((a, b) => b.height - a.height).slice(0, 20);
-          });
+      stream.on('error', fail);
+      stream.on('end', () => active() && setIsStreaming(false));
+      stream.on('data', (response) => {
+        if (!active()) return;
+        const lock = response.getChainLock_asU8();
+        if (lock.length === 132) {
+          chainLockHeight = Math.max(chainLockHeight, new DataView(lock.buffer, lock.byteOffset).getUint32(0, true));
+          setBlocks((prev) => prev.map((b) => ({ ...b, chainLocked: b.height <= chainLockHeight })));
         }
-      }
+        const headers = response.getBlockHeaders()?.getHeadersList_asU8() ?? [];
+        const firstHeight = nextHeight;
+        nextHeight += headers.length;
+        Promise.all(
+          headers.map(async (header, index) => ({
+            height: firstHeight + index,
+            hash: await client.core.getBlockHash(firstHeight + index),
+            timestamp: new DataView(header.buffer, header.byteOffset).getUint32(68, true),
+          })),
+        )
+          .then((newBlocks) => {
+            if (!active()) return;
+            setBlocks((prev) => {
+              const locked = newBlocks.map((b) => ({ ...b, chainLocked: b.height <= chainLockHeight }));
+              const combined = [...locked, ...prev];
+              const unique = combined.filter(
+                (block, index, self) => index === self.findIndex((b) => b.height === block.height),
+              );
+              return unique.sort((a, b) => b.height - a.height).slice(0, 20);
+            });
+          })
+          .catch(fail);
+      });
     } catch (err) {
-      if (!abortRef.current) {
-        setError((err as Error).message);
-        setIsStreaming(false);
-      }
+      fail(err as Error);
     }
   }, [client, currentHeight]);
 
   useEffect(() => {
     return () => {
-      abortRef.current = true;
+      sessionRef.current++;
+      streamRef.current?.cancel();
+      streamRef.current = null;
     };
   }, [network]);
 
