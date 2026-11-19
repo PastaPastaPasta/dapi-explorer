@@ -1,5 +1,7 @@
-export function formatTimestamp(timestamp: number | string): string {
-  const date = new Date(typeof timestamp === 'string' ? timestamp : timestamp * 1000);
+export function formatTimestamp(timestamp: number | bigint | string): string {
+  const date = new Date(
+    typeof timestamp === 'bigint' ? Number(timestamp) : typeof timestamp === 'string' ? timestamp : timestamp * 1000,
+  );
   return date.toLocaleString();
 }
 

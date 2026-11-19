@@ -96,9 +96,9 @@ declare module '@dashevo/dapi-client' {
 
   interface EpochInfo {
     number: number;
-    firstBlockHeight: string;
+    firstBlockHeight: bigint;
     firstCoreBlockHeight: number;
-    startTime: string;
+    startTime: bigint;
     feeMultiplier: number;
   }
 
@@ -114,6 +114,18 @@ declare module '@dashevo/dapi-client' {
     };
   }
 
+  interface BlockHeadersResponse {
+    getBlockHeaders(): { getHeadersList_asU8(): Uint8Array[] } | undefined;
+    getChainLock_asU8(): Uint8Array;
+  }
+
+  interface BlockHeadersStream {
+    on(event: 'data', listener: (response: BlockHeadersResponse) => void): void;
+    on(event: 'error', listener: (error: Error) => void): void;
+    on(event: 'end', listener: () => void): void;
+    cancel(): void;
+  }
+
   interface DAPIClientInstance {
     core: {
       getBlockchainStatus(): Promise<BlockchainStatus>;
@@ -127,7 +139,7 @@ declare module '@dashevo/dapi-client' {
       subscribeToBlockHeadersWithChainLocks(opts?: {
         fromBlockHeight?: number;
         count?: number;
-      }): Promise<AsyncIterable<unknown>>;
+      }): Promise<BlockHeadersStream>;
     };
     platform: {
       getStatus(): Promise<PlatformStatus>;
@@ -148,6 +160,7 @@ declare module '@dashevo/dapi-client' {
   interface DAPIClientOptions {
     network?: 'mainnet' | 'testnet';
     dapiAddresses?: string[];
+    dapiAddressProvider?: unknown;
     timeout?: number;
     retries?: number;
   }
@@ -169,5 +182,24 @@ declare module '@dashevo/dapi-client' {
     ConsensusParams,
     DAPIClientInstance,
     DAPIClientOptions,
+    BlockHeadersStream,
   };
+}
+
+declare module '@dashevo/dapi-client/lib/dapiAddressProvider/DAPIAddress.js' {
+  export default class DAPIAddress {
+    constructor(address: string);
+    toString(): string;
+  }
+}
+
+declare module '@dashevo/dapi-client/lib/dapiAddressProvider/ListDAPIAddressProvider.js' {
+  import type DAPIAddress from '@dashevo/dapi-client/lib/dapiAddressProvider/DAPIAddress.js';
+  export default class ListDAPIAddressProvider {
+    constructor(addresses: DAPIAddress[], options?: { network?: string; baseBanTime?: number });
+    getLiveAddress(): Promise<DAPIAddress | undefined>;
+    hasLiveAddresses(): Promise<boolean>;
+    getAllAddresses(): DAPIAddress[];
+    setAddresses(addresses: DAPIAddress[]): this;
+  }
 }
