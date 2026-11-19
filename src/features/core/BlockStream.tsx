@@ -18,14 +18,14 @@ export function BlockStream() {
   const [blocks, setBlocks] = useState<BlockHeader[]>([]);
   const [error, setError] = useState<string | null>(null);
   const streamRef = useRef<BlockHeadersStream | null>(null);
-  const abortRef = useRef(false);
+  const sessionRef = useRef(0);
 
   const client = useDapi();
   const network = useNetworkStore((s) => s.network);
   const { data: currentHeight } = useBestBlockHeight();
 
   const stopStream = useCallback(() => {
-    abortRef.current = true;
+    sessionRef.current++;
     setIsStreaming(false);
     streamRef.current?.cancel();
     streamRef.current = null;
@@ -36,10 +36,14 @@ export function BlockStream() {
 
     setError(null);
     setIsStreaming(true);
-    abortRef.current = false;
+    const session = ++sessionRef.current;
+    const active = () => sessionRef.current === session;
 
     const fail = (err: Error) => {
-      if (abortRef.current) return;
+      if (!active()) return;
+      sessionRef.current++;
+      streamRef.current?.cancel();
+      streamRef.current = null;
       setError(err.message);
       setIsStreaming(false);
     };
@@ -51,15 +55,15 @@ export function BlockStream() {
         fromBlockHeight: nextHeight,
         count: 0,
       });
-      if (abortRef.current) {
+      if (!active()) {
         stream.cancel();
         return;
       }
       streamRef.current = stream;
       stream.on('error', fail);
-      stream.on('end', () => setIsStreaming(false));
+      stream.on('end', () => active() && setIsStreaming(false));
       stream.on('data', (response) => {
-        if (abortRef.current) return;
+        if (!active()) return;
         const lock = response.getChainLock_asU8();
         if (lock.length === 132) {
           chainLockHeight = Math.max(chainLockHeight, new DataView(lock.buffer, lock.byteOffset).getUint32(0, true));
@@ -73,13 +77,13 @@ export function BlockStream() {
             height: firstHeight + index,
             hash: await client.core.getBlockHash(firstHeight + index),
             timestamp: new DataView(header.buffer, header.byteOffset).getUint32(68, true),
-            chainLocked: firstHeight + index <= chainLockHeight,
           })),
         )
           .then((newBlocks) => {
-            if (abortRef.current) return;
+            if (!active()) return;
             setBlocks((prev) => {
-              const combined = [...newBlocks, ...prev];
+              const locked = newBlocks.map((b) => ({ ...b, chainLocked: b.height <= chainLockHeight }));
+              const combined = [...locked, ...prev];
               const unique = combined.filter(
                 (block, index, self) => index === self.findIndex((b) => b.height === block.height),
               );
@@ -95,7 +99,7 @@ export function BlockStream() {
 
   useEffect(() => {
     return () => {
-      abortRef.current = true;
+      sessionRef.current++;
       streamRef.current?.cancel();
       streamRef.current = null;
     };

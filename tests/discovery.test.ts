@@ -26,7 +26,10 @@ async function answersGrpcWeb(address: string): Promise<boolean> {
       body: empty,
       signal: AbortSignal.timeout(8000),
     });
-    return response.ok && (await response.arrayBuffer()).byteLength > 5;
+    const body = new Uint8Array(await response.arrayBuffer());
+    if (!response.ok || body.length < 5 || body[0] !== 0x00) return false;
+    const trailerFrame = body.subarray(5 + new DataView(body.buffer).getUint32(1));
+    return trailerFrame[0] === 0x80 && /grpc-status:\s*0\b/.test(new TextDecoder().decode(trailerFrame.subarray(5)));
   } catch {
     return false;
   }
