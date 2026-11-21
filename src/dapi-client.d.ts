@@ -198,3 +198,17 @@ declare module '@dashevo/dapi-client/lib/dapiAddressProvider/ListDAPIAddressProv
     setAddresses(addresses: DAPIAddress[]): this;
   }
 }
+
+declare module '@dashevo/dapi-grpc' {
+  type Unary = (request: unknown, metadata: object, callback: (error: Error | null, response: unknown) => void) => void;
+  type PromiseUnary = (request: unknown, metadata?: object) => Promise<unknown>;
+  export const v0: {
+    PlatformPromiseClient: {
+      prototype: {
+        client: Record<'getIdentityBalance' | 'getTotalCreditsInPlatform', Unary>;
+        getIdentityBalance?: PromiseUnary;
+        getTotalCreditsInPlatform?: PromiseUnary;
+      };
+    };
+  };
+}

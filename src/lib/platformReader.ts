@@ -1,5 +1,6 @@
 import DAPIClient, { type DAPIClientInstance, type EpochInfo, type PlatformStatus } from '@dashevo/dapi-client';
 import loadDpp, { type DashPlatformProtocol } from '@dashevo/wasm-dpp';
+import { v0 } from '@dashevo/dapi-grpc';
 import { DiscoveringAddressProvider } from './addressProvider';
 import type { NetworkType } from './networks';
 
@@ -11,6 +12,15 @@ export interface PlatformReader {
   identity(id: Uint8Array): Promise<Record<string, unknown> | null>;
   identityBalance(id: Uint8Array): Promise<bigint>;
   contract(id: Uint8Array): Promise<Record<string, unknown> | null>;
+}
+
+const promiseClient = v0.PlatformPromiseClient.prototype;
+for (const method of ['getIdentityBalance', 'getTotalCreditsInPlatform'] as const) {
+  promiseClient[method] ??= function (this: typeof promiseClient, request: unknown, metadata = {}) {
+    return new Promise((resolve, reject) => {
+      this.client[method](request, metadata, (error: Error | null, response: unknown) => (error ? reject(error) : resolve(response)));
+    });
+  };
 }
 
 let protocol: Promise<DashPlatformProtocol> | undefined;
