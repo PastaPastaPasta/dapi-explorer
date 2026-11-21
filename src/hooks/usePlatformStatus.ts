@@ -9,7 +9,7 @@ export function usePlatformStatus() {
 
   return useQuery({
     queryKey: ['platformStatus', network],
-    queryFn: () => platformRead(network, (sdk) => sdk.system.status()),
+    queryFn: () => platformRead(network, (reader) => reader.status()),
     refetchInterval: 15000,
   });
 }
@@ -18,7 +18,7 @@ export function useCurrentEpoch() {
   const network = useNetworkStore((s) => s.network);
   return useQuery({
     queryKey: ['currentEpoch', network],
-    queryFn: () => platformRead(network, (sdk) => sdk.epoch.current(), 10000),
+    queryFn: () => platformRead(network, (reader) => reader.currentEpoch(), 10000),
     refetchInterval: (query) => query.state.status === 'error' ? false : 15000,
   });
 }
@@ -29,10 +29,7 @@ export function useEpochsInfo(start: number | undefined, count = 10) {
   return useQuery({
     queryKey: ['epochsInfo', network, start, count],
     enabled: start !== undefined,
-    queryFn: () => platformRead(network, async (sdk) => {
-      const epochs = await sdk.epoch.epochsInfo({ startEpoch: start, count, ascending: false });
-      return { epochsInfo: [...epochs.values()].filter((epoch) => epoch !== undefined).sort((a, b) => b.index - a.index) };
-    }, 10000),
+    queryFn: () => platformRead(network, async (reader) => ({ epochsInfo: await reader.epochs(start!, count) }), 10000),
   });
 }
 
@@ -41,7 +38,7 @@ export function useTotalCredits() {
 
   return useQuery({
     queryKey: ['totalCredits', network],
-    queryFn: () => platformRead(network, async (sdk) => ({ totalCreditsInPlatform: await sdk.system.totalCreditsInPlatform() })),
+    queryFn: () => platformRead(network, async (reader) => ({ totalCreditsInPlatform: await reader.totalCredits() })),
     refetchInterval: 30000,
   });
 }

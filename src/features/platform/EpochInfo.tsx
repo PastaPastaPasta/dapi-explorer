@@ -13,7 +13,7 @@ export function EpochInfo() {
   const [page, setPage] = useUrlParam('epoch');
   const { data: currentEpoch, isLoading: currentLoading, error: currentError, refetch: retryCurrent } = useCurrentEpoch();
   const requested = /^\d+$/.test(page) && Number.isSafeInteger(Number(page)) ? Number(page) : undefined;
-  const start = currentEpoch ? Math.min(requested ?? currentEpoch.index, currentEpoch.index) : undefined;
+  const start = currentEpoch !== undefined ? Math.min(requested ?? currentEpoch, currentEpoch) : undefined;
   const {
     data: epochsData,
     isLoading: epochsLoading,
@@ -30,10 +30,10 @@ export function EpochInfo() {
   const hasConsensusStructure = consensusParams?.block?.maxBytes !== undefined;
 
   const epochs = epochsData?.epochsInfo ?? [];
-  const earliest = epochs[epochs.length - 1]?.index;
+  const earliest = epochs[epochs.length - 1]?.number;
 
   return (
-    <Card title="Epochs and consensus" method="epoch.epochsInfo">
+    <Card title="Epochs and consensus" method="getEpochsInfo">
       <div className="space-y-6">
         {epochsLoading && <Reading subject="epochs" />}
         {epochsError && (
@@ -53,15 +53,15 @@ export function EpochInfo() {
             <>
               <ol className="epoch-list">
                 {epochs.map((epoch) => (
-                  <li key={epoch.index}>
+                  <li key={epoch.number}>
                     <p className="dh-meta mb-2">
-                      <strong>Epoch #{epoch.index}</strong>
-                      {epoch.index === currentEpoch?.index && <span className="dh-badge dh-badge--info">Current epoch</span>}
+                      <strong>Epoch #{epoch.number}</strong>
+                      {epoch.number === currentEpoch && <span className="dh-badge dh-badge--info">Current epoch</span>}
                     </p>
                     <p className="dh-meta">
                       <span>Start block {epoch.firstBlockHeight != null ? formatNumber(epoch.firstBlockHeight) : 'Not reported'}</span>
                       <span>Core block {epoch.firstCoreBlockHeight != null ? formatNumber(epoch.firstCoreBlockHeight) : 'Not reported'}</span>
-                      <span>Start time {epoch.firstBlockTime != null ? formatTimestamp(epoch.firstBlockTime, 'milliseconds') : 'Not reported'}</span>
+                      <span>Start time {epoch.startTime != null ? formatTimestamp(epoch.startTime, 'milliseconds') : 'Not reported'}</span>
                       <span>Fee multiplier {epoch.feeMultiplier?.toFixed?.(4) ?? 'Not reported'}</span>
                     </p>
                   </li>

@@ -23,8 +23,8 @@ export function IdentityLookup() {
       if (!submitted) return null;
       const idBytes = identifierToBytes(submitted);
       const [identity, balance] = await Promise.all([
-        platformRead(network, (sdk) => sdk.identities.fetch(idBytes)),
-        platformRead(network, async (sdk) => ({ balance: await sdk.identities.balance(idBytes) })).catch(() => null),
+        platformRead(network, (reader) => reader.identity(idBytes)),
+        platformRead(network, async (reader) => ({ balance: await reader.identityBalance(idBytes) })).catch(() => null),
       ]);
       return { identity, balance };
     },
@@ -40,7 +40,7 @@ export function IdentityLookup() {
   };
 
   return (
-    <Card title="Identity lookup" method="identities.fetch">
+    <Card title="Identity lookup" method="getIdentity">
       <form onSubmit={handleSubmit} className="dh-field mb-4">
         <label className="dh-field__label" htmlFor="identity-input">Identity ID (base58 or hex)</label>
         <div className="dh-inline-form">

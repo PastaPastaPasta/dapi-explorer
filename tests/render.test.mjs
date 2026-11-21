@@ -92,22 +92,22 @@ const epochHooks = await import(moduleUrl(new URL('../src/hooks/usePlatformStatu
 
 test('epoch queries wait for the current index and request descending, bounded pages including genesis', async () => {
   let query;
-  globalThis.epochSdk = { epoch: {
-    current: async () => ({ index: 87 }),
-    epochsInfo: async (options) => {
-      query = options;
-      return new Map([[0, { index: 0 }], [2, undefined], [1, { index: 1 }]]);
+  globalThis.epochSdk = {
+    currentEpoch: async () => 87,
+    epochs: async (start, count) => {
+      query = { start, count };
+      return [{ number: 1 }, { number: 0 }];
     },
-  } };
+  };
   assert.equal(epochHooks.useEpochsInfo(undefined).enabled, false);
-  assert.equal((await epochHooks.useCurrentEpoch().queryFn()).index, 87);
+  assert.equal(await epochHooks.useCurrentEpoch().queryFn(), 87);
   for (const start of [87, 77, 0]) {
     const options = epochHooks.useEpochsInfo(start);
     assert.equal(options.enabled, true);
     assert.deepEqual(options.queryKey, ['epochsInfo', 'mainnet', start, 10]);
     const result = await options.queryFn();
-    assert.deepEqual(query, { startEpoch: start, count: 10, ascending: false });
-    assert.deepEqual(result.epochsInfo.map(epoch => epoch.index), [1, 0]);
+    assert.deepEqual(query, { start, count: 10 });
+    assert.deepEqual(result.epochsInfo.map(epoch => epoch.number), [1, 0]);
   }
 });
 
@@ -120,14 +120,15 @@ const { EpochInfo } = await import(moduleUrl(new URL('../src/features/platform/E
 }));
 
 test('epoch rendering marks current and bounds older pages without falling back to genesis on failed current reads', () => {
-  globalThis.currentEpochState = { data: { index: 1 } };
-  globalThis.epochsState = { data: { epochsInfo: [{ index: 1, firstBlockHeight: 0 }, { index: 0 }] } };
+  globalThis.currentEpochState = { data: 1 };
+  globalThis.epochsState = { data: { epochsInfo: [{ number: 1, firstBlockHeight: 0n, startTime: 1724795532000n }, { number: 0 }] } };
   globalThis.epochPage = '';
   const html = render(EpochInfo);
   assert.equal(globalThis.requestedEpoch, 1);
   assert.match(html, /Epoch #1/);
   assert.match(html, /Current epoch/);
   assert.match(html, /Start block 0/);
+  assert.match(html, /Start time 27 Aug 2024, 21:52 UTC/);
   assert.doesNotMatch(html, /Show earlier|Back to latest/);
   globalThis.epochPage = '999';
   assert.match(render(EpochInfo), /Back to latest/);

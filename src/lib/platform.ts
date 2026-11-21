@@ -1,18 +1,13 @@
-import { EvoSDK } from '@dashevo/evo-sdk';
 import type { NetworkType } from './networks';
+import { createPlatformReader, type PlatformReader } from './platformReader';
 import { withDeadline } from './request';
 
-const sessions = new Map<NetworkType, Promise<EvoSDK>>();
+const sessions = new Map<NetworkType, Promise<PlatformReader>>();
 
-export async function platformRead<T>(network: NetworkType, read: (sdk: EvoSDK) => Promise<T>, timeoutMs = 18000): Promise<T> {
+export async function platformRead<T>(network: NetworkType, read: (reader: PlatformReader) => Promise<T>, timeoutMs = 18000): Promise<T> {
   let session = sessions.get(network);
   if (!session) {
-    const sdk = new EvoSDK({
-      network,
-      trusted: true,
-      settings: { connectTimeoutMs: 4000, timeoutMs: 5000, retries: 1 },
-    });
-    session = sdk.connect().then(() => sdk);
+    session = createPlatformReader(network);
     sessions.set(network, session);
   }
   try {

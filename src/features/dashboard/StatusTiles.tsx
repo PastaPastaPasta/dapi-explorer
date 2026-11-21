@@ -26,7 +26,7 @@ export function StatusTiles() {
   }, []);
   const tiles = [
     { label: 'Core', height, timestamp: block.data ?? null, target: 150, loading: core.isLoading || block.isLoading, failed: !!core.error || !!block.error },
-    { label: 'Platform', height: platform.data?.chain?.latest_block_height, timestamp: blockTimestamp(platform.data?.time?.block), target: 180, loading: platform.isLoading, failed: !!platform.error },
+    { label: 'Platform', height: platform.data?.chain?.latestBlockHeight, timestamp: blockTimestamp(platform.data?.time?.block), target: 180, loading: platform.isLoading, failed: !!platform.error },
   ];
   return (
     <dl className="console-status-tiles">

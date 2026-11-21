@@ -29,7 +29,7 @@ export function DataContractViewer() {
     queryFn: async () => {
       if (!submitted) return null;
       const idBytes = identifierToBytes(submitted);
-      return platformRead(network, async (sdk) => (await sdk.contracts.fetch(idBytes))?.toJSON(sdk.version()) ?? null);
+      return platformRead(network, (reader) => reader.contract(idBytes));
     },
     enabled: !!submitted,
   });
@@ -48,7 +48,7 @@ export function DataContractViewer() {
   };
 
   return (
-    <Card title="Data contract" method="contracts.fetch">
+    <Card title="Data contract" method="getDataContract">
       <form onSubmit={handleSubmit} className="dh-field mb-4">
         <label className="dh-field__label" htmlFor="contract-input">Contract ID (base58 or hex)</label>
         <div className="dh-inline-form">

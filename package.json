@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@dashevo/dapi-client": "^5.0.3",
-    "@dashevo/evo-sdk": "5.0.0-rc.8",
+    "@dashevo/wasm-dpp": "^5.0.3",
     "@tanstack/react-query": "^5.51.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

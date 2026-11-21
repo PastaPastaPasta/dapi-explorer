@@ -8,9 +8,9 @@ export function NetworkRecovery({ kind, id }: { kind: 'identity' | 'contract'; i
   const other = network === 'mainnet' ? 'testnet' : 'mainnet';
   const probe = useQuery({
     queryKey: ['network-recovery', kind, other, id],
-    queryFn: () => platformRead(other, async (sdk) => {
+    queryFn: () => platformRead(other, async (reader) => {
       const bytes = identifierToBytes(id);
-      return !!(await (kind === 'identity' ? sdk.identities.fetch(bytes) : sdk.contracts.fetch(bytes)));
+      return !!(await (kind === 'identity' ? reader.identity(bytes) : reader.contract(bytes)));
     }),
     retry: false,
     staleTime: 60000,

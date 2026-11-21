@@ -1,6 +1,6 @@
-export function blockTimestamp(value: string | number | undefined): number | null {
+export function blockTimestamp(value: string | number | bigint | undefined): number | null {
   if (value === undefined || value === '') return null;
-  const timestamp = typeof value === 'number' || /^\d+$/.test(value)
+  const timestamp = typeof value !== 'string' || /^\d+$/.test(value)
     ? Number(value) * (Number(value) < 1e11 ? 1000 : 1)
     : Date.parse(value);
   return Number.isFinite(timestamp) && timestamp > 0 ? timestamp : null;

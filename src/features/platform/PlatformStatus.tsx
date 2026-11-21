@@ -29,8 +29,8 @@ export function PlatformStatus() {
   } = useTotalCredits();
 
   const s = status;
-  const software = s?.version?.software;
-  const proTxHash = hashText(s?.toJSON()?.node?.proTxHash);
+  const version = s?.version;
+  const proTxHash = hashText(s?.node?.proTxHash);
   const chain = s?.chain;
   const network = s?.network;
   const time = s?.time;
@@ -38,7 +38,7 @@ export function PlatformStatus() {
 
   return (
     <Card
-      title="Platform status" method="system.status"
+      title="Platform status" method="getStatus"
       loading={isLoading}
       error={error}
       onRetry={() => void refetch()}
@@ -46,11 +46,11 @@ export function PlatformStatus() {
       {s && (
         <div className="space-y-6">
           <p
-            className={`node-verdict ${chain?.isCatchingUp ? "node-verdict--warn" : ""}`}
+            className={`node-verdict ${chain?.catchingUp ? "node-verdict--warn" : ""}`}
           >
-            {chain?.isCatchingUp === true
+            {chain?.catchingUp === true
               ? "Node reports it is catching up. Reads may lag behind the network."
-              : chain?.isCatchingUp === false
+              : chain?.catchingUp === false
                 ? "Node reports it is synced. Responses have not been proof-checked."
                 : "This node did not report its sync state. See the raw response."}
           </p>
@@ -84,7 +84,7 @@ export function PlatformStatus() {
                 </a>
               </p>
               <p className="dh-meta mt-2">
-                <span className="read-age">Read <Freshness value={dataUpdatedAt} /></span><span>SDK 5.0.0-rc.8</span>
+                <span className="read-age">Read <Freshness value={dataUpdatedAt} /></span><span>dapi-client 5.0.3</span>
               </p>
             </div>
           )}
@@ -92,24 +92,24 @@ export function PlatformStatus() {
             <Stat
               label="Block height"
               value={
-                chain?.latest_block_height != null
-                  ? formatNumber(String(chain.latest_block_height))
+                chain?.latestBlockHeight != null
+                  ? formatNumber(chain.latestBlockHeight)
                   : "N/A"
               }
             />
             <Stat
               label="Core ChainLock"
               value={
-                chain?.core_chain_locked_height != null
-                  ? formatNumber(String(chain.core_chain_locked_height))
+                chain?.coreChainLockedHeight != null
+                  ? formatNumber(chain.coreChainLockedHeight)
                   : "N/A"
               }
             />
             <Stat
               label="Peers"
               value={
-                network?.peers_count != null
-                  ? String(network.peers_count)
+                network?.peersCount != null
+                  ? String(network.peersCount)
                   : "N/A"
               }
             />
@@ -119,19 +119,19 @@ export function PlatformStatus() {
             <dl className="node-facts mt-3">
               <div>
                 <dt>DAPI</dt>
-                <dd>{String(software?.dapi ?? "Not reported")}</dd>
+                <dd>{String(version?.dapiVersion ?? "Not reported")}</dd>
               </div>
               <div>
                 <dt>Drive</dt>
-                <dd>{String(software?.drive ?? "Not reported")}</dd>
+                <dd>{String(version?.driveVersion ?? "Not reported")}</dd>
               </div>
               <div>
                 <dt>Tenderdash</dt>
                 <dd>
                   <HashValue
                     value={
-                      software?.tenderdash
-                        ? String(software.tenderdash)
+                      version?.tenderdashVersion
+                        ? String(version.tenderdashVersion)
                         : undefined
                     }
                     label="Tenderdash build"
@@ -142,21 +142,21 @@ export function PlatformStatus() {
               <div>
                 <dt>Protocol</dt>
                 <dd>
-                  {s.version?.protocol?.drive?.current != null
-                    ? `v${s.version.protocol.drive.current}`
+                  {version?.driveCurrentProtocol != null
+                    ? `v${version.driveCurrentProtocol}`
                     : "Not reported"}
                 </dd>
               </div>
               <div>
                 <dt>Chain ID</dt>
-                <dd>{String(network?.chain_id ?? "Not reported")}</dd>
+                <dd>{String(network?.chainId ?? "Not reported")}</dd>
               </div>
               <div>
                 <dt>Listening</dt>
                 <dd>
-                  {network?.isListening === undefined
+                  {network?.listening === undefined
                     ? "Not reported"
-                    : network.isListening
+                    : network.listening
                       ? "Yes"
                       : "No"}
                 </dd>
@@ -165,7 +165,7 @@ export function PlatformStatus() {
                 <dt>Latest block</dt>
                 <dd>
                   <HashValue
-                    value={chain?.latest_block_hash}
+                    value={chain?.latestBlockHash}
                     label="Latest Platform block hash"
                   />
                 </dd>
@@ -173,15 +173,15 @@ export function PlatformStatus() {
               <div>
                 <dt>Max peer height</dt>
                 <dd>
-                  {chain?.max_peer_block_height != null
-                    ? formatNumber(String(chain.max_peer_block_height))
+                  {chain?.maxPeerBlockHeight != null
+                    ? formatNumber(chain.maxPeerBlockHeight)
                     : "Not reported"}
                 </dd>
               </div>
               <div>
                 <dt>Node ID</dt>
                 <dd>
-                  <HashValue value={node?.id} label="Platform node ID" />
+                  <HashValue value={node?.nodeId} label="Platform node ID" />
                 </dd>
               </div>
               <div>
@@ -213,7 +213,7 @@ export function PlatformStatus() {
               onRetry={() => void retryCredits()}
             />
           )}
-          <JsonView data={s.toJSON()} label="Raw node response · Details" />
+          <JsonView data={s} label="Raw node response · Details" />
         </div>
       )}
     </Card>
