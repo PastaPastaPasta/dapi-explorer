@@ -160,7 +160,7 @@ export function Layout({
             Open Explorer
           </a>{" "}
           ·{" "}
-          <a href={window.dashhq.href("explorer", "/tools/fees/", { network })}>
+          <a href={window.dashhq.href("fees", "/", { network })}>
             Fee estimator
           </a>
         </span>
