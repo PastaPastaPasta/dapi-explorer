@@ -48,7 +48,7 @@ export function BlockchainStatus() {
                 />
               </p>
               <p className="dh-meta">
-                <span className="read-age">Read <Freshness value={data.readAt} /></span><span>Refreshes every 10 seconds</span>{error && <span>Refresh failed</span>}
+                <span className="read-age">Read <Freshness value={data.readAt} /></span><span>Refreshes every 10 seconds</span>
               </p>
             </div>
           )}

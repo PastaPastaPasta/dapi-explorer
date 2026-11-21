@@ -68,8 +68,7 @@ export function RefreshFailed({ subject, onRetry }: { subject: string; onRetry?:
   return (
     <p className="dh-meta refresh-failed mb-3" role="status">
       <span>Couldn’t refresh {subject}</span>
-      <span>Showing the last successful read, retrying</span>
-      {onRetry && <span><button type="button" className="dh-btn dh-btn--sm" onClick={onRetry}>Retry now</button></span>}
+      <span>Showing the last successful read, retrying{onRetry && <>{" "}<button type="button" className="dh-btn dh-btn--link" onClick={onRetry}>Retry now</button></>}</span>
     </p>
   );
 }
