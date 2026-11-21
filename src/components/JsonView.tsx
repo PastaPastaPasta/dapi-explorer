@@ -3,9 +3,10 @@ import { useState } from 'react';
 interface JsonViewProps {
   data: unknown;
   maxHeight?: string;
+  label?: string;
 }
 
-export function JsonView({ data, maxHeight = '400px' }: JsonViewProps) {
+export function JsonView({ data, maxHeight = '400px', label = 'Details · raw response' }: JsonViewProps) {
   const [expanded, setExpanded] = useState(false);
 
   const jsonString = JSON.stringify(data, (_, value) => {
@@ -21,19 +22,21 @@ export function JsonView({ data, maxHeight = '400px' }: JsonViewProps) {
   }, 2);
 
   return (
-    <div className="relative">
+    <details className="dh-disclosure json-details">
+      <summary><span>{label}</span></summary>
+      <div className="response-head json-head"><span>Node response</span><span className="dh-badge dh-badge--reported">Reported</span></div>
       <button
         onClick={() => setExpanded(!expanded)}
-        className="absolute top-2 right-2 text-xs text-gray-500 hover:text-gray-700 bg-gray-100 px-2 py-1 rounded"
+        className="mb-2 dh-btn dh-btn--sm"
       >
         {expanded ? 'Collapse' : 'Expand'}
       </button>
       <pre
-        className="bg-gray-50 rounded p-3 text-xs font-mono overflow-auto"
+        className="bg-gray-50 rounded p-3 text-xs font-mono overflow-auto whitespace-pre-wrap break-all"
         style={{ maxHeight: expanded ? 'none' : maxHeight }}
       >
         {jsonString}
       </pre>
-    </div>
+    </details>
   );
 }

@@ -1,88 +1,139 @@
-import { Card } from '../../components/Card';
-import { JsonView } from '../../components/JsonView';
-import { useEpochsInfo, useConsensusParams } from '../../hooks/usePlatformStatus';
-import { formatNumber, formatTimestamp, formatBytes } from '../../lib/format';
+import { useUrlParam } from "../../lib/location";
+import { ReadBoundary, ReadError, Reading } from "../../components/ReadState";
+import { Card, Stat } from "../../components/Card";
+import { JsonView } from "../../components/JsonView";
+import {
+  useEpochsInfo,
+  useCurrentEpoch,
+  useConsensusParams,
+} from "../../hooks/usePlatformStatus";
+import { formatNumber, formatTimestamp, formatBytes } from "../../lib/format";
 
 export function EpochInfo() {
-  const { data: epochsData, isLoading: epochsLoading, error: epochsError } = useEpochsInfo(0, 10);
-  const { data: consensusParams, isLoading: paramsLoading } = useConsensusParams();
+  const [page, setPage] = useUrlParam('epoch');
+  const { data: currentEpoch, isLoading: currentLoading, error: currentError, refetch: retryCurrent } = useCurrentEpoch();
+  const requested = /^\d+$/.test(page) && Number.isSafeInteger(Number(page)) ? Number(page) : undefined;
+  const start = currentEpoch !== undefined ? Math.min(requested ?? currentEpoch, currentEpoch) : undefined;
+  const {
+    data: epochsData,
+    isLoading: epochsLoading,
+    error: epochsError,
+    refetch: retryEpochs,
+  } = useEpochsInfo(start);
+  const {
+    data: consensusParams,
+    isFetching: paramsLoading,
+    error: paramsError,
+    refetch: retryParams,
+  } = useConsensusParams(false);
 
-  const isLoading = epochsLoading || paramsLoading;
-  const error = epochsError;
-
-  // Check if consensus params have expected structure
   const hasConsensusStructure = consensusParams?.block?.maxBytes !== undefined;
 
-  return (
-    <Card title="Epochs & Consensus" loading={isLoading} error={error}>
-      <div className="space-y-6">
-        {consensusParams && !hasConsensusStructure && (
-          <div>
-            <p className="text-sm text-gray-500 mb-2">Consensus params (raw):</p>
-            <JsonView data={consensusParams} />
-          </div>
-        )}
-        {consensusParams && hasConsensusStructure && (
-          <div>
-            <h4 className="text-sm font-medium text-gray-700 mb-3">Consensus Parameters</h4>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              <div className="py-2">
-                <dt className="text-xs text-gray-500 uppercase tracking-wide">Max Block Bytes</dt>
-                <dd className="mt-1 text-gray-900">
-                  {consensusParams.block?.maxBytes ? formatBytes(parseInt(consensusParams.block.maxBytes, 10)) : 'N/A'}
-                </dd>
-              </div>
-              <div className="py-2">
-                <dt className="text-xs text-gray-500 uppercase tracking-wide">Max Evidence Age (Blocks)</dt>
-                <dd className="mt-1 text-gray-900">
-                  {consensusParams.evidence?.maxAgeNumBlocks ? formatNumber(consensusParams.evidence.maxAgeNumBlocks) : 'N/A'}
-                </dd>
-              </div>
-              <div className="py-2">
-                <dt className="text-xs text-gray-500 uppercase tracking-wide">Max Evidence Bytes</dt>
-                <dd className="mt-1 text-gray-900">
-                  {consensusParams.evidence?.maxBytes ? formatBytes(parseInt(consensusParams.evidence.maxBytes, 10)) : 'N/A'}
-                </dd>
-              </div>
-            </div>
-          </div>
-        )}
+  const epochs = epochsData?.epochsInfo ?? [];
+  const earliest = epochs[epochs.length - 1]?.number;
 
-        {epochsData?.epochsInfo && epochsData.epochsInfo.length > 0 && (
-          <div>
-            <h4 className="text-sm font-medium text-gray-700 mb-3">Recent Epochs</h4>
-            <div className="border border-gray-200 rounded overflow-hidden">
-              <table className="w-full text-sm">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-3 py-2 text-left font-medium text-gray-600">Epoch</th>
-                    <th className="px-3 py-2 text-left font-medium text-gray-600">Start Block</th>
-                    <th className="px-3 py-2 text-left font-medium text-gray-600">Core Block</th>
-                    <th className="px-3 py-2 text-left font-medium text-gray-600">Start Time</th>
-                    <th className="px-3 py-2 text-left font-medium text-gray-600">Fee Multiplier</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {epochsData.epochsInfo.map((epoch, idx) => (
-                    <tr key={epoch?.number ?? idx} className="hover:bg-gray-50">
-                      <td className="px-3 py-2 font-mono">{epoch?.number ?? 'N/A'}</td>
-                      <td className="px-3 py-2 font-mono text-xs">
-                        {epoch?.firstBlockHeight ? formatNumber(epoch.firstBlockHeight) : 'N/A'}
-                      </td>
-                      <td className="px-3 py-2 font-mono text-xs">
-                        {epoch?.firstCoreBlockHeight ? formatNumber(epoch.firstCoreBlockHeight) : 'N/A'}
-                      </td>
-                      <td className="px-3 py-2 text-gray-600 text-xs">
-                        {epoch?.startTime ? formatTimestamp(epoch.startTime) : 'N/A'}
-                      </td>
-                      <td className="px-3 py-2">{epoch?.feeMultiplier?.toFixed?.(4) ?? 'N/A'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+  return (
+    <Card title="Epochs and consensus" method="getEpochsInfo">
+      <div className="space-y-6">
+        <ReadBoundary subject="the current epoch" loading={currentLoading} error={currentError} hasData={currentEpoch !== undefined} onRetry={() => void retryCurrent()}>
+          <ReadBoundary subject="epochs" loading={epochsLoading} error={epochsError} hasData={!!epochsData} onRetry={() => void retryEpochs()}>
+            {epochsData && (
+              <section aria-label="Recent epochs">
+                <h3 className="dh-h3 mb-3">Recent epochs</h3>
+                <p className="dh-sources mb-3">Source: Platform epoch records, newest first. Not proof-checked.</p>
+                {epochs.length > 0 ? (
+                  <>
+                    <ol className="epoch-list">
+                      {epochs.map((epoch) => (
+                        <li key={epoch.number}>
+                          <p className="dh-meta mb-2">
+                            <strong>Epoch #{epoch.number}</strong>
+                            {epoch.number === currentEpoch && <span className="dh-badge dh-badge--info">Current epoch</span>}
+                          </p>
+                          <p className="dh-meta">
+                            <span>Start block {epoch.firstBlockHeight != null ? formatNumber(epoch.firstBlockHeight) : 'Not reported'}</span>
+                            <span>Core block {epoch.firstCoreBlockHeight != null ? formatNumber(epoch.firstCoreBlockHeight) : 'Not reported'}</span>
+                            <span>Start time {epoch.startTime != null ? formatTimestamp(epoch.startTime, 'milliseconds') : 'Not reported'}</span>
+                            <span>Fee multiplier {epoch.feeMultiplier?.toFixed?.(4) ?? 'Not reported'}</span>
+                          </p>
+                        </li>
+                      ))}
+                    </ol>
+                    <div className="dh-actions mt-4">
+                      {earliest !== undefined && earliest > 0 && <button className="dh-btn" onClick={() => setPage(String(earliest - 1))}>Show earlier</button>}
+                      {requested !== undefined && <button className="dh-btn" onClick={() => setPage('')}>Back to latest</button>}
+                    </div>
+                  </>
+                ) : <p>No epochs returned by this node.</p>}
+              </section>
+            )}
+          </ReadBoundary>
+        </ReadBoundary>
+        <details className="dh-disclosure">
+          <summary><span>Advanced: legacy consensus parameters</span></summary>
+          <p className="text-sm text-gray-500">
+            Current nodes expose consensus version and sync state in Platform
+            status. The legacy consensus-parameters endpoint may be unavailable.
+          </p>
+          <button
+            className="dh-btn"
+            disabled={paramsLoading}
+            onClick={() => void retryParams()}
+          >
+            Read legacy consensus parameters
+          </button>
+          {paramsLoading && <Reading subject="consensus parameters" />}
+          {paramsError && (
+            <ReadError
+              error={paramsError}
+              subject="consensus parameters"
+              onRetry={() => void retryParams()}
+            />
+          )}
+          {consensusParams && !hasConsensusStructure && (
+            <div>
+              <p className="text-sm text-gray-500 mb-2">
+                Consensus params (raw):
+              </p>
+              <JsonView data={consensusParams} />
             </div>
-          </div>
-        )}
+          )}
+          {consensusParams && hasConsensusStructure && (
+            <div>
+              <h3 className="dh-h3 mb-3">Consensus parameters</h3>
+              <dl className="dh-stats">
+                <Stat
+                  label="Max block bytes"
+                  value={
+                    consensusParams.block?.maxBytes
+                      ? formatBytes(
+                          parseInt(consensusParams.block.maxBytes, 10),
+                        )
+                      : "— · Not reported by this node"
+                  }
+                />
+                <Stat
+                  label="Max evidence age (blocks)"
+                  value={
+                    consensusParams.evidence?.maxAgeNumBlocks
+                      ? formatNumber(consensusParams.evidence.maxAgeNumBlocks)
+                      : "— · Not reported by this node"
+                  }
+                />
+                <Stat
+                  label="Max evidence bytes"
+                  value={
+                    consensusParams.evidence?.maxBytes
+                      ? formatBytes(
+                          parseInt(consensusParams.evidence.maxBytes, 10),
+                        )
+                      : "— · Not reported by this node"
+                  }
+                />
+              </dl>
+            </div>
+          )}
+        </details>
       </div>
     </Card>
   );

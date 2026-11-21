@@ -1,8 +1,21 @@
-export function formatTimestamp(timestamp: number | bigint | string): string {
+export function formatTimestamp(
+  timestamp: number | bigint | string,
+  unit: 'seconds' | 'milliseconds' = 'seconds',
+): string {
+  const numeric = typeof timestamp !== 'string' || /^\d+$/.test(timestamp);
   const date = new Date(
-    typeof timestamp === 'bigint' ? Number(timestamp) : typeof timestamp === 'string' ? timestamp : timestamp * 1000,
+    numeric ? Number(timestamp) * (unit === 'seconds' ? 1000 : 1) : String(timestamp),
   );
-  return date.toLocaleString();
+  return Number.isNaN(date.getTime())
+    ? 'Unavailable'
+    : new Intl.DateTimeFormat('en-GB', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: 'UTC',
+      }).format(date) + ' UTC';
 }
 
 export function formatRelativeTime(timestamp: number | string): string {
@@ -45,4 +58,26 @@ export function formatBytes(bytes: number): string {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} KB`;
   if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
   return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+}
+
+export function formatDash(credits: bigint | number | string): string {
+  const value = BigInt(credits);
+  const whole = value / 100_000_000_000n;
+  const fraction = (value % 100_000_000_000n).toString().padStart(11, '0').slice(0, 8).replace(/0+$/, '');
+  return `${whole.toLocaleString('en-US')}${fraction ? '.' + fraction : ''}`;
+}
+
+export function creditValue(value: unknown): bigint | null {
+  if (typeof value !== 'bigint' && typeof value !== 'number' && typeof value !== 'string') return null;
+  if (typeof value === 'number' && !Number.isSafeInteger(value)) return null;
+  if (typeof value === 'string' && !/^\d+$/.test(value)) return null;
+  try { const parsed = BigInt(value); return parsed >= 0n ? parsed : null; } catch { return null; }
+}
+
+export function hashText(value: unknown): string | null {
+  if (typeof value === 'string') return value.trim() || null;
+  if (value instanceof Uint8Array || (Array.isArray(value) && value.length > 0 && value.every(byte => Number.isInteger(byte) && byte >= 0 && byte <= 255))) {
+    return Array.from(value as Uint8Array).map(byte => byte.toString(16).padStart(2, '0')).join('') || null;
+  }
+  return null;
 }

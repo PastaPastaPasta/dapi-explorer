@@ -1,31 +1,28 @@
 import React from 'react';
+import { ReadBoundary } from './ReadState';
 
 interface CardProps {
   title: string;
+  method?: string;
   children: React.ReactNode;
   className?: string;
   loading?: boolean;
   error?: Error | null;
+  hasData?: boolean;
+  onRetry?: () => void;
 }
 
-export function Card({ title, children, className = '', loading, error }: CardProps) {
+export function Card({ title, method, children, className = '', loading, error, hasData, onRetry }: CardProps) {
   return (
-    <div className={`bg-white rounded-lg shadow-sm border border-gray-200 ${className}`}>
-      <div className="px-4 py-3 border-b border-gray-100">
-        <h3 className="font-medium text-gray-900">{title}</h3>
+    <div className={`dh-card dh-card--flush ${className}`}>
+      <div className="dh-card__head response-head">
+        <div><h2 className="dh-h3">{title}</h2>{method && <code className="response-method">{method}</code>}</div>
+        <span className="dh-badge dh-badge--reported">Reported</span>
       </div>
-      <div className="p-4">
-        {loading ? (
-          <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-6 w-6 border-2 border-dash-blue border-t-transparent" />
-          </div>
-        ) : error ? (
-          <div className="text-red-600 text-sm bg-red-50 rounded p-3">
-            {error.message}
-          </div>
-        ) : (
-          children
-        )}
+      <div className="px-4 pb-4 md:px-5">
+        <ReadBoundary subject={title.toLowerCase()} loading={loading} error={error} hasData={hasData} onRetry={onRetry}>
+          {children}
+        </ReadBoundary>
       </div>
     </div>
   );
@@ -38,11 +35,14 @@ interface StatProps {
 }
 
 export function Stat({ label, value, mono }: StatProps) {
+  const missing = value == null ||
+    (typeof value === 'string' && (!value.trim() || value === 'N/A')) ||
+    (typeof value === 'number' && !Number.isFinite(value));
   return (
-    <div className="py-2">
-      <dt className="text-xs text-gray-500 uppercase tracking-wide">{label}</dt>
-      <dd className={`mt-1 text-gray-900 ${mono ? 'font-mono text-sm break-all' : ''}`}>
-        {value}
+    <div className="dh-stat min-w-0">
+      <dt className="dh-stat__label">{label}</dt>
+      <dd className={`dh-stat__value ${mono || missing || (typeof value === 'string' && value.startsWith('—')) ? 'stat-text' : 'stat-number'} ${mono ? 'font-mono' : ''}`}>
+        {missing ? '— · Not reported by this node' : typeof value === 'boolean' ? String(value) : value}
       </dd>
     </div>
   );

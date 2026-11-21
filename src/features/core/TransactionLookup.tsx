@@ -1,22 +1,26 @@
-import { useState, type FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useUrlParam } from '../../lib/location';
+import { ReadError, Reading } from '../../components/ReadState';
+import { HashValue } from '../../components/HashValue';
 import { Card, Stat } from '../../components/Card';
 import { useDapi } from '../../hooks/useDapi';
 import { useNetworkStore } from '../../store/network';
 import { bytesToHex } from '../../lib/dapi';
-import { truncateHash } from '../../lib/format';
 
 export function TransactionLookup() {
-  const [txid, setTxid] = useState('');
-  const [submitted, setSubmitted] = useState<string | null>(null);
+  const [submitted, setSubmitted] = useUrlParam('tx');
+  const [txid, setTxid] = useState(submitted);
+  useEffect(() => setTxid(submitted), [submitted]);
 
   const client = useDapi();
   const network = useNetworkStore((s) => s.network);
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isFetching: isLoading, error, refetch } = useQuery({
     queryKey: ['transaction', network, submitted],
     queryFn: async () => {
       if (!submitted) return null;
+      if (!/^[0-9a-fA-F]{64}$/.test(submitted)) throw new Error('Use a 64-character hexadecimal transaction ID.');
       return client.core.getTransaction(submitted);
     },
     enabled: !!submitted,
@@ -25,50 +29,47 @@ export function TransactionLookup() {
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (txid.trim()) {
-      setSubmitted(txid.trim());
+      if (submitted === txid.trim()) void refetch();
+      else setSubmitted(txid.trim());
     }
   };
 
   return (
-    <Card title="Transaction Lookup">
-      <form onSubmit={handleSubmit} className="space-y-3 mb-4">
-        <div className="flex gap-2">
+    <Card title="Transaction lookup" method="getTransaction">
+      <form onSubmit={handleSubmit} className="dh-field mb-4">
+        <label className="dh-field__label" htmlFor="tx-input">Transaction ID (64 hexadecimal characters)</label>
+        <div className="dh-inline-form">
           <input
+            id="tx-input" aria-describedby="tx-input-help"
+            required pattern="[0-9a-fA-F]{64}"
+            title="Use a 32-byte ID: 64 hexadecimal characters."
             type="text"
             value={txid}
-            onChange={(e) => setTxid(e.target.value)}
+            onChange={(e) => setTxid(e.target.value.trim())}
             placeholder="Transaction ID (txid)"
-            className="flex-1 border border-gray-300 rounded px-3 py-1.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-dash-blue"
+            className="dh-input dh-input--mono flex-1"
           />
           <button
             type="submit"
-            className="bg-dash-blue text-white px-4 py-1.5 rounded text-sm hover:bg-dash-dark transition-colors"
+            className="dh-btn dh-btn--primary"
           >
-            Lookup
+            Look up transaction
           </button>
         </div>
+        <p className="dh-field__help" id="tx-input-help">Use the full 64-character hexadecimal transaction ID.</p>
       </form>
 
-      {isLoading && (
-        <div className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-6 w-6 border-2 border-dash-blue border-t-transparent" />
-        </div>
-      )}
-
-      {error && (
-        <div className="text-red-600 text-sm bg-red-50 rounded p-3">
-          {(error as Error).message}
-        </div>
-      )}
+      {isLoading && <Reading subject="the lookup result" />}
+      {error && !isLoading && <ReadError error={error} subject="the lookup result" onRetry={() => void refetch()} />}
 
       {data && (
         <div className="space-y-3">
-          <div className="grid grid-cols-2 gap-4">
+          <dl className="dh-stats grid grid-cols-2 gap-4">
             <Stat label="Height" value={data.height} />
             <Stat label="Confirmations" value={data.confirmations} />
             <Stat
-              label="Block Hash"
-              value={truncateHash(bytesToHex(data.blockHash))}
+              label="Block hash"
+              value={<HashValue value={data.blockHash ? bytesToHex(data.blockHash) : undefined} label="Block hash" />}
               mono
             />
             <Stat
@@ -87,9 +88,9 @@ export function TransactionLookup() {
                 </span>
               }
             />
-          </div>
+          </dl>
           <div>
-            <dt className="text-xs text-gray-500 uppercase tracking-wide mb-2">Raw Transaction (Hex)</dt>
+            <p className="text-xs text-gray-500 mb-2">Raw transaction (hex)</p>
             <pre className="bg-gray-50 rounded p-3 text-xs font-mono overflow-auto max-h-48 break-all">
               {bytesToHex(data.transaction)}
             </pre>

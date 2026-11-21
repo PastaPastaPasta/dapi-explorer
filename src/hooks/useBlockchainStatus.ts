@@ -1,6 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
+import { withDeadline } from '../lib/request';
 import { useDapi } from './useDapi';
 import { useNetworkStore } from '../store/network';
+import { readCoreStatus } from '../lib/core-status';
 
 export function useBlockchainStatus() {
   const client = useDapi();
@@ -8,7 +10,7 @@ export function useBlockchainStatus() {
 
   return useQuery({
     queryKey: ['blockchainStatus', network],
-    queryFn: () => client.core.getBlockchainStatus(),
+    queryFn: () => readCoreStatus(client),
     refetchInterval: 10000,
   });
 }
@@ -19,7 +21,7 @@ export function useBestBlockHeight() {
 
   return useQuery({
     queryKey: ['bestBlockHeight', network],
-    queryFn: () => client.core.getBestBlockHeight(),
+    queryFn: () => withDeadline(client.core.getBestBlockHeight()),
     refetchInterval: 10000,
   });
 }
@@ -30,7 +32,7 @@ export function useBestBlockHash() {
 
   return useQuery({
     queryKey: ['bestBlockHash', network],
-    queryFn: () => client.core.getBestBlockHash(),
+    queryFn: () => withDeadline(client.core.getBestBlockHash()),
     refetchInterval: 10000,
   });
 }

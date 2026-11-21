@@ -1,13 +1,15 @@
 import { BlockchainStatus } from '../core/BlockchainStatus';
 import { PlatformStatus } from '../platform/PlatformStatus';
+import { BlockStream } from '../core/BlockStream';
 
 export function Dashboard() {
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="dashboard-grid">
+      <div className="space-y-6 dashboard-diagnostics">
         <BlockchainStatus />
         <PlatformStatus />
       </div>
+      <BlockStream ticker />
     </div>
   );
 }

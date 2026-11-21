@@ -50,47 +50,41 @@ declare module '@dashevo/dapi-client' {
 
   interface PlatformStatus {
     version: {
-      software: {
-        dapi: string;
-        drive: string;
-        tenderdash: string;
-      };
-      protocol: {
-        tenderdash: {
-          p2p: number;
-          block: number;
-        };
-        drive: {
-          latest: number;
-          current: number;
-        };
-      };
+      dapiVersion: string;
+      driveVersion?: string;
+      tenderdashVersion?: string;
+      tenderdashP2pProtocol: number;
+      tenderdashBlockProtocol: number;
+      driveCurrentProtocol: number;
+      driveLatestProtocol: number;
+      driveNextEpochProtocol?: number;
     };
     node: {
-      id: string;
-      proTxHash: string;
-    };
+      nodeId: string;
+      proTxHash?: string;
+    } | null;
     chain: {
       catchingUp: boolean;
       latestBlockHash: string;
       latestAppHash: string;
-      latestBlockHeight: string;
+      latestBlockHeight: bigint;
       earliestBlockHash: string;
       earliestAppHash: string;
-      earliestBlockHeight: string;
-      maxPeerBlockHeight: string;
-      coreChainLockedHeight: number;
-    };
+      earliestBlockHeight: bigint;
+      maxPeerBlockHeight: bigint;
+      coreChainLockedHeight?: number;
+    } | null;
     network: {
       chainId: string;
       peersCount: number;
       listening: boolean;
     };
+    stateSync: unknown;
     time: {
-      local: string;
-      block: string;
-      genesis: string;
-      epoch: number;
+      local: bigint;
+      block?: bigint;
+      genesis?: bigint;
+      epoch?: number;
     };
   }
 
@@ -127,8 +121,12 @@ declare module '@dashevo/dapi-client' {
   }
 
   interface DAPIClientInstance {
+    dapiAddressProvider: {
+      getLiveAddress(): Promise<{ toString(): string } | undefined>;
+      hasLiveAddresses(): Promise<boolean>;
+    };
     core: {
-      getBlockchainStatus(): Promise<BlockchainStatus>;
+      getBlockchainStatus(options?: { dapiAddressProvider: DAPIClientInstance['dapiAddressProvider'] }): Promise<BlockchainStatus>;
       getBestBlockHeight(): Promise<number>;
       getBestBlockHash(): Promise<string>;
       getBlockByHeight(height: number): Promise<Uint8Array>;
@@ -143,16 +141,12 @@ declare module '@dashevo/dapi-client' {
     };
     platform: {
       getStatus(): Promise<PlatformStatus>;
-      getIdentity(id: Uint8Array): Promise<unknown>;
-      getIdentityBalance(id: Uint8Array): Promise<{ balance: bigint }>;
-      getIdentityKeys(id: Uint8Array, opts?: unknown): Promise<unknown>;
-      getDataContract(id: Uint8Array): Promise<unknown>;
-      getDataContractHistory(id: Uint8Array, opts?: unknown): Promise<unknown>;
-      getDocuments(contractId: Uint8Array, type: string, opts?: unknown): Promise<unknown>;
+      getIdentity(id: Uint8Array): Promise<{ getIdentity(): Uint8Array }>;
+      getIdentityBalance(id: Uint8Array): Promise<{ getBalance(): bigint }>;
+      getDataContract(id: Uint8Array): Promise<{ getDataContract(): Uint8Array }>;
       getConsensusParams(height?: number): Promise<ConsensusParams>;
-      getEpochsInfo(start: number, count: number): Promise<{ epochsInfo: EpochInfo[] }>;
-      getTotalCreditsInPlatform(): Promise<{ totalCreditsInPlatform: bigint }>;
-      getProtocolVersionUpgradeState(): Promise<unknown>;
+      getEpochsInfo(start: number, count: number, options?: { ascending?: boolean }): Promise<{ getEpochsInfo(): EpochInfo[] }>;
+      getTotalCreditsInPlatform(): Promise<{ getTotalCreditsInPlatform(): bigint }>;
     };
     disconnect(): Promise<void>;
   }
@@ -168,6 +162,7 @@ declare module '@dashevo/dapi-client' {
   class DAPIClient implements DAPIClientInstance {
     constructor(options?: DAPIClientOptions);
     core: DAPIClientInstance['core'];
+    dapiAddressProvider: DAPIClientInstance['dapiAddressProvider'];
     platform: DAPIClientInstance['platform'];
     disconnect(): Promise<void>;
   }
@@ -202,4 +197,18 @@ declare module '@dashevo/dapi-client/lib/dapiAddressProvider/ListDAPIAddressProv
     getAllAddresses(): DAPIAddress[];
     setAddresses(addresses: DAPIAddress[]): this;
   }
+}
+
+declare module '@dashevo/dapi-grpc' {
+  type Unary = (request: unknown, metadata: object, callback: (error: Error | null, response: unknown) => void) => void;
+  type PromiseUnary = (request: unknown, metadata?: object) => Promise<unknown>;
+  export const v0: {
+    PlatformPromiseClient: {
+      prototype: {
+        client: Record<'getIdentityBalance' | 'getTotalCreditsInPlatform', Unary>;
+        getIdentityBalance?: PromiseUnary;
+        getTotalCreditsInPlatform?: PromiseUnary;
+      };
+    };
+  };
 }

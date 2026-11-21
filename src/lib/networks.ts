@@ -37,4 +37,4 @@ export const networks: Record<NetworkType, NetworkConfig> = {
   },
 };
 
-export const defaultNetwork: NetworkType = 'testnet';
+export const defaultNetwork: NetworkType = 'mainnet';

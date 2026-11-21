@@ -3,7 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>DAPI Explorer</title>
+    <title>DAPI console · dashhq</title>
+    <script src="/dashhq/dashhq-shell.js"></script>
+    <link rel="preload" href="/dashhq/fonts/archivo-latin-var.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="/dashhq/dashhq-tokens.css">
+    <link rel="stylesheet" href="/dashhq/dashhq-shell.css">
+    <link rel="stylesheet" href="/dashhq/dashhq-components.css">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+
     <script>
       // Polyfill process.nextTick for Node.js compatibility
       if (typeof globalThis.process === 'undefined') {

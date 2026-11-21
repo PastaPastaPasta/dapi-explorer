@@ -1,84 +1,86 @@
-import { useState, type FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Card, Stat } from '../../components/Card';
+import { useUrlParam } from '../../lib/location';
+import { ReadError, Reading } from '../../components/ReadState';
+import { Card } from '../../components/Card';
 import { JsonView } from '../../components/JsonView';
-import { useDapi } from '../../hooks/useDapi';
+import { platformRead } from '../../lib/platform';
 import { useNetworkStore } from '../../store/network';
-import { hexToBytes } from '../../lib/dapi';
+import { BalanceStat } from '../../components/BalanceStat';
+import { NetworkRecovery } from '../../components/NetworkRecovery';
+import { identifierError, identifierToBytes, identifierToBase58 } from '../../lib/identifier';
 
 export function IdentityLookup() {
-  const [identityId, setIdentityId] = useState('');
-  const [submitted, setSubmitted] = useState<string | null>(null);
+  const [submitted, setSubmitted] = useUrlParam('identity');
+  const [identityId, setIdentityId] = useState(submitted);
+  useEffect(() => setIdentityId(submitted), [submitted]);
 
-  const client = useDapi();
   const network = useNetworkStore((s) => s.network);
+  const unit = network === 'testnet' ? 'tDASH' : 'DASH';
+  const idError = submitted ? identifierError(submitted) : null;
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isFetching: isLoading, error, refetch } = useQuery({
     queryKey: ['identity', network, submitted],
     queryFn: async () => {
       if (!submitted) return null;
-      const idBytes = hexToBytes(submitted);
+      const idBytes = identifierToBytes(submitted);
       const [identity, balance] = await Promise.all([
-        client.platform.getIdentity(idBytes),
-        client.platform.getIdentityBalance(idBytes).catch(() => null),
+        platformRead(network, (reader) => reader.identity(idBytes)),
+        platformRead(network, async (reader) => ({ balance: await reader.identityBalance(idBytes) })).catch(() => null),
       ]);
       return { identity, balance };
     },
-    enabled: !!submitted,
+    enabled: !!submitted && !idError,
   });
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (identityId.trim()) {
-      setSubmitted(identityId.trim());
+      if (submitted === identityId.trim()) { if (!idError) void refetch(); }
+      else setSubmitted(identityId.trim());
     }
   };
 
   return (
-    <Card title="Identity Lookup">
-      <form onSubmit={handleSubmit} className="space-y-3 mb-4">
-        <div className="flex gap-2">
+    <Card title="Identity lookup" method="getIdentity">
+      <form onSubmit={handleSubmit} className="dh-field mb-4">
+        <label className="dh-field__label" htmlFor="identity-input">Identity ID (base58 or hex)</label>
+        <div className="dh-inline-form">
           <input
+            id="identity-input" aria-describedby={idError ? 'identity-input-help identity-input-error' : 'identity-input-help'}
+            aria-invalid={idError ? true : undefined}
+            required
+            title="Use a base58 Platform ID or 64 hexadecimal characters."
             type="text"
             value={identityId}
             onChange={(e) => setIdentityId(e.target.value)}
-            placeholder="Identity ID (hex, 32 bytes)"
-            className="flex-1 border border-gray-300 rounded px-3 py-1.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-dash-blue"
+            placeholder="Identity ID (base58 or hex)"
+            className="dh-input dh-input--mono flex-1"
           />
           <button
             type="submit"
-            className="bg-dash-blue text-white px-4 py-1.5 rounded text-sm hover:bg-dash-dark transition-colors"
+            className="dh-btn dh-btn--primary"
           >
-            Lookup
+            Look up identity
           </button>
         </div>
-        <p className="text-xs text-gray-500">
-          Enter a 32-byte hex identity ID (e.g., from a Dash Platform application)
-        </p>
+        <p className="dh-field__help" id="identity-input-help">Paste the base58 identity ID used in Explorer, or its 64-character hexadecimal representation.</p>
+        {idError && <p className="dh-field__error" id="identity-input-error">{idError}</p>}
       </form>
 
-      {isLoading && (
-        <div className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-6 w-6 border-2 border-dash-blue border-t-transparent" />
-        </div>
-      )}
+      {isLoading && <Reading subject="the lookup result" />}
+      {error && !isLoading && <ReadError error={error} subject="the lookup result" onRetry={() => void refetch()} />}
 
-      {error && (
-        <div className="text-red-600 text-sm bg-red-50 rounded p-3">
-          {(error as Error).message}
-        </div>
-      )}
+      {submitted && data?.identity && <p className="text-sm mb-4"><a href={window.dashhq.href('explorer', '/identity/?id=' + identifierToBase58(submitted), { network })}>Open identity in Explorer →</a></p>}
 
+      {data && !data.identity && !isLoading && !error && <NetworkRecovery kind="identity" id={submitted} />}
       {data?.identity ? (
         <div className="space-y-4">
           {data.balance ? (
-            <Stat
-              label="Credit Balance"
-              value={`${Number(data.balance.balance).toLocaleString()} credits`}
-            />
-          ) : null}
+            <dl className="dh-stats"><BalanceStat label={`Balance · ${unit} equivalent`} credits={data.balance.balance} unit={unit} /></dl>
+          ) : <p className="dh-notice dh-notice--info">The identity loaded, but its balance is unavailable. <button className="dh-btn" onClick={() => void refetch()}>Retry balance</button></p>}
           <div>
-            <dt className="text-xs text-gray-500 uppercase tracking-wide mb-2">Identity Data</dt>
+            <p className="text-xs text-gray-500 mb-2">Identity data</p>
             <JsonView data={data.identity} />
           </div>
         </div>

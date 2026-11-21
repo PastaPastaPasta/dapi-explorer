@@ -1,40 +1,45 @@
-import { useState, type FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useUrlParam } from '../../lib/location';
+import { ReadError, Reading } from '../../components/ReadState';
 import { Card } from '../../components/Card';
+import { NetworkRecovery } from '../../components/NetworkRecovery';
 import { JsonView } from '../../components/JsonView';
-import { useDapi } from '../../hooks/useDapi';
+import { platformRead } from '../../lib/platform';
 import { useNetworkStore } from '../../store/network';
-import { hexToBytes } from '../../lib/dapi';
+import { identifierError, identifierToBytes, identifierToBase58 } from '../../lib/identifier';
 
 const KNOWN_CONTRACTS = [
   {
-    name: 'DPNS (Domain Names)',
-    id: '6469736874657374646f6d61696e73746573746e657470726f746f636f6c3131',
+    name: 'Usernames (DPNS)',
+    id: 'e668c659af66aee1e72c186dde7b5b7e0a1d712a09c40d5721f622bf53c53155',
     description: 'Dash Platform Naming Service',
   },
 ];
 
 export function DataContractViewer() {
-  const [contractId, setContractId] = useState('');
-  const [submitted, setSubmitted] = useState<string | null>(null);
+  const [submitted, setSubmitted] = useUrlParam('contract');
+  const [contractId, setContractId] = useState(submitted);
+  useEffect(() => setContractId(submitted), [submitted]);
 
-  const client = useDapi();
   const network = useNetworkStore((s) => s.network);
+  const idError = submitted ? identifierError(submitted) : null;
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isFetching: isLoading, isSuccess, error, refetch } = useQuery({
     queryKey: ['dataContract', network, submitted],
     queryFn: async () => {
       if (!submitted) return null;
-      const idBytes = hexToBytes(submitted);
-      return client.platform.getDataContract(idBytes);
+      const idBytes = identifierToBytes(submitted);
+      return platformRead(network, (reader) => reader.contract(idBytes));
     },
-    enabled: !!submitted,
+    enabled: !!submitted && !idError,
   });
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (contractId.trim()) {
-      setSubmitted(contractId.trim());
+      if (submitted === contractId.trim()) { if (!idError) void refetch(); }
+      else setSubmitted(contractId.trim());
     }
   };
 
@@ -44,33 +49,40 @@ export function DataContractViewer() {
   };
 
   return (
-    <Card title="Data Contract Viewer">
-      <form onSubmit={handleSubmit} className="space-y-3 mb-4">
-        <div className="flex gap-2">
+    <Card title="Data contract" method="getDataContract">
+      <form onSubmit={handleSubmit} className="dh-field mb-4">
+        <label className="dh-field__label" htmlFor="contract-input">Contract ID (base58 or hex)</label>
+        <div className="dh-inline-form">
           <input
+            id="contract-input" aria-describedby={idError ? 'contract-input-help contract-input-error' : 'contract-input-help'}
+            aria-invalid={idError ? true : undefined}
+            required
+            title="Use a base58 Platform ID or 64 hexadecimal characters."
             type="text"
             value={contractId}
             onChange={(e) => setContractId(e.target.value)}
-            placeholder="Data Contract ID (hex, 32 bytes)"
-            className="flex-1 border border-gray-300 rounded px-3 py-1.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-dash-blue"
+            placeholder="Contract ID (base58 or hex)"
+            className="dh-input dh-input--mono flex-1"
           />
           <button
             type="submit"
-            className="bg-dash-blue text-white px-4 py-1.5 rounded text-sm hover:bg-dash-dark transition-colors"
+            className="dh-btn dh-btn--primary"
           >
-            Fetch
+            Fetch contract
           </button>
         </div>
+        <p className="dh-field__help" id="contract-input-help">Use a base58 contract ID or its hexadecimal representation.</p>
+        {idError && <p className="dh-field__error" id="contract-input-error">{idError}</p>}
       </form>
 
       <div className="mb-4">
-        <p className="text-xs text-gray-500 mb-2">Known contracts (click to load):</p>
+        <p className="text-xs text-gray-500 mb-2">Known contracts:</p>
         <div className="flex flex-wrap gap-2">
           {KNOWN_CONTRACTS.map((contract) => (
             <button
               key={contract.id}
               onClick={() => handleKnownContract(contract.id)}
-              className="text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded transition-colors"
+              className="dh-btn dh-btn--sm"
               title={contract.description}
             >
               {contract.name}
@@ -79,21 +91,15 @@ export function DataContractViewer() {
         </div>
       </div>
 
-      {isLoading && (
-        <div className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-6 w-6 border-2 border-dash-blue border-t-transparent" />
-        </div>
-      )}
+      {isLoading && <Reading subject="the lookup result" />}
+      {error && !isLoading && <ReadError error={error} subject="the lookup result" onRetry={() => void refetch()} />}
+      {submitted && isSuccess && !isLoading && !data && <NetworkRecovery kind="contract" id={submitted} />}
 
-      {error && (
-        <div className="text-red-600 text-sm bg-red-50 rounded p-3">
-          {(error as Error).message}
-        </div>
-      )}
+      {submitted && data && <p className="text-sm mb-4"><a href={window.dashhq.href('explorer', '/contract/?id=' + identifierToBase58(submitted), { network })}>Open contract in Explorer →</a></p>}
 
       {data ? (
         <div>
-          <dt className="text-xs text-gray-500 uppercase tracking-wide mb-2">Contract Schema</dt>
+          <p className="text-xs text-gray-500 mb-2">Contract schema</p>
           <JsonView data={data} maxHeight="500px" />
         </div>
       ) : null}

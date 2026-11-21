@@ -1,22 +1,28 @@
-import { useState, type FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useUrlParam, updateUrl } from '../../lib/location';
+import { ReadError, Reading } from '../../components/ReadState';
 import { Card, Stat } from '../../components/Card';
 import { useDapi } from '../../hooks/useDapi';
 import { useNetworkStore } from '../../store/network';
 import { bytesToHex } from '../../lib/dapi';
 
 export function BlockExplorer() {
-  const [searchType, setSearchType] = useState<'height' | 'hash'>('height');
-  const [searchValue, setSearchValue] = useState('');
-  const [submitted, setSubmitted] = useState<{ type: 'height' | 'hash'; value: string } | null>(null);
+  const [block] = useUrlParam('block');
+  const [type] = useUrlParam('blockType', 'height');
+  const [searchType, setSearchType] = useState<'height' | 'hash'>(type === 'hash' ? 'hash' : 'height');
+  const [searchValue, setSearchValue] = useState(block);
+  useEffect(() => { setSearchValue(block); setSearchType(type === 'hash' ? 'hash' : 'height'); }, [block, type]);
+  const submitted = block ? { type, value: block } : null;
 
   const client = useDapi();
   const network = useNetworkStore((s) => s.network);
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isFetching: isLoading, error, refetch } = useQuery({
     queryKey: ['block', network, submitted?.type, submitted?.value],
     queryFn: async () => {
       if (!submitted) return null;
+      if (submitted.type === 'height' ? !/^\d+$/.test(submitted.value) || !Number.isSafeInteger(Number(submitted.value)) : !/^[0-9a-fA-F]{64}$/.test(submitted.value)) throw new Error('Use a non-negative block height or a 64-character hexadecimal hash.');
       if (submitted.type === 'height') {
         const blockData = await client.core.getBlockByHeight(parseInt(submitted.value, 10));
         return { raw: bytesToHex(blockData), height: submitted.value };
@@ -31,56 +37,51 @@ export function BlockExplorer() {
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (searchValue.trim()) {
-      setSubmitted({ type: searchType, value: searchValue.trim() });
+      if (block === searchValue.trim() && type === searchType) void refetch();
+      else updateUrl({ block: searchValue.trim(), blockType: searchType });
     }
   };
 
   return (
-    <Card title="Block Explorer">
-      <form onSubmit={handleSubmit} className="space-y-3 mb-4">
-        <div className="flex gap-2">
-          <select
+    <Card title="Block lookup" method="getBlockByHeight / getBlockByHash">
+      <form onSubmit={handleSubmit} className="dh-field mb-4">
+        <label className="dh-field__label" htmlFor="block-input">Block height or hash</label>
+        <div className="dh-inline-form">
+          <select aria-label="Find block by"
             value={searchType}
             onChange={(e) => setSearchType(e.target.value as 'height' | 'hash')}
-            className="border border-gray-300 rounded px-2 py-1.5 text-sm bg-white"
+            className="dh-select"
           >
-            <option value="height">By Height</option>
-            <option value="hash">By Hash</option>
+            <option value="height">By height</option>
+            <option value="hash">By hash</option>
           </select>
           <input
+            id="block-input" aria-describedby="block-input-help" required pattern={searchType === 'height' ? '[0-9]+' : '[0-9a-fA-F]{64}'}
             type="text"
             value={searchValue}
-            onChange={(e) => setSearchValue(e.target.value)}
+            onChange={(e) => setSearchValue(e.target.value.trim())}
             placeholder={searchType === 'height' ? 'Block height (e.g., 1000)' : 'Block hash'}
-            className="flex-1 border border-gray-300 rounded px-3 py-1.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-dash-blue"
+            className="dh-input dh-input--mono flex-1"
           />
           <button
             type="submit"
-            className="bg-dash-blue text-white px-4 py-1.5 rounded text-sm hover:bg-dash-dark transition-colors"
+            className="dh-btn dh-btn--primary"
           >
-            Fetch
+            Fetch block
           </button>
         </div>
+        <p className="dh-field__help" id="block-input-help">Use a block height or a 64-character hexadecimal hash.</p>
       </form>
 
-      {isLoading && (
-        <div className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-6 w-6 border-2 border-dash-blue border-t-transparent" />
-        </div>
-      )}
-
-      {error && (
-        <div className="text-red-600 text-sm bg-red-50 rounded p-3">
-          {(error as Error).message}
-        </div>
-      )}
+      {isLoading && <Reading subject="the block" />}
+      {error && !isLoading && <ReadError error={error} subject="the block" onRetry={() => void refetch()} />}
 
       {data && (
         <div className="space-y-3">
-          {data.height && <Stat label="Height" value={data.height} />}
-          {data.hash && <Stat label="Hash" value={data.hash} mono />}
+          {data.height && <dl className="dh-stats"><Stat label="Height" value={data.height} /></dl>}
+          {data.hash && <dl className="dh-stats"><Stat label="Hash" value={data.hash} mono /></dl>}
           <div>
-            <dt className="text-xs text-gray-500 uppercase tracking-wide mb-2">Raw Block Data (Hex)</dt>
+            <p className="text-xs text-gray-500 mb-2">Raw block data (hex)</p>
             <pre className="bg-gray-50 rounded p-3 text-xs font-mono overflow-auto max-h-48 break-all">
               {data.raw}
             </pre>

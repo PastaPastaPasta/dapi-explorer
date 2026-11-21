@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useUrlParam } from './lib/location';
 import { Layout } from './components/Layout';
 import { Dashboard } from './features/dashboard/Dashboard';
-import { BlockchainStatus } from './features/core/BlockchainStatus';
+import { CoreSummary } from './features/core/BlockchainStatus';
 import { BlockExplorer } from './features/core/BlockExplorer';
 import { TransactionLookup } from './features/core/TransactionLookup';
 import { BlockStream } from './features/core/BlockStream';
@@ -12,36 +12,42 @@ import { EpochInfo } from './features/platform/EpochInfo';
 
 const tabs = [
   { id: 'dashboard', label: 'Dashboard' },
-  { id: 'core', label: 'Core (L1)' },
-  { id: 'platform', label: 'Platform (L2)' },
-  { id: 'stream', label: 'Live Stream' },
+  { id: 'core', label: 'Core' },
+  { id: 'platform', label: 'Platform' },
+  { id: 'stream', label: 'Live stream' },
 ];
 
 function App() {
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [identity] = useUrlParam('identity');
+  const [contract] = useUrlParam('contract');
+  const [tab, setTab] = useUrlParam('tab', identity || contract ? 'platform' : 'dashboard');
+  const activeTab = tabs.some((item) => item.id === tab) ? tab : 'dashboard';
 
   return (
-    <Layout tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab}>
+    <Layout tabs={tabs} activeTab={activeTab} onTabChange={setTab}>
       {activeTab === 'dashboard' && <Dashboard />}
 
       {activeTab === 'core' && (
         <div className="space-y-6">
-          <BlockchainStatus />
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <BlockExplorer />
             <TransactionLookup />
           </div>
+          <CoreSummary />
         </div>
       )}
 
       {activeTab === 'platform' && (
         <div className="space-y-6">
-          <PlatformStatus />
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <IdentityLookup />
             <DataContractViewer />
           </div>
           <EpochInfo />
+          <details className="dh-disclosure" id="platform-diagnostics">
+            <summary><span>Platform node diagnostics</span></summary>
+            <PlatformStatus />
+          </details>
         </div>
       )}
 

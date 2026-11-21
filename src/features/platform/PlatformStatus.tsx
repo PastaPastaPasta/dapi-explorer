@@ -1,92 +1,210 @@
-import { Card, Stat } from '../../components/Card';
-import { usePlatformStatus, useTotalCredits } from '../../hooks/usePlatformStatus';
-import { formatNumber, formatCredits, truncateHash } from '../../lib/format';
+import { BalanceStat } from "../../components/BalanceStat";
+import { JsonView } from "../../components/JsonView";
+import { useNetworkStore } from "../../store/network";
+import { Freshness } from "../../components/Freshness";
+import { HashValue } from "../../components/HashValue";
+import { Card, Stat } from "../../components/Card";
+import { ReadBoundary } from "../../components/ReadState";
+import {
+  usePlatformStatus,
+  useTotalCredits,
+} from "../../hooks/usePlatformStatus";
+import { formatNumber, hashText } from "../../lib/format";
 
 export function PlatformStatus() {
-  const { data: status, isLoading, error } = usePlatformStatus();
-  const { data: credits } = useTotalCredits();
+  const selectedNetwork = useNetworkStore((s) => s.network);
+  const unit = selectedNetwork === "testnet" ? "tDASH" : "DASH";
+  const {
+    data: status,
+    isLoading,
+    error,
+    refetch,
+    dataUpdatedAt,
+  } = usePlatformStatus();
+  const {
+    data: credits,
+    isLoading: creditsLoading,
+    error: creditsError,
+    refetch: retryCredits,
+  } = useTotalCredits();
 
-  // The actual API response has a different structure than the TypeScript types
-  // Cast to any to access the real fields
-  const s = status as Record<string, unknown> | undefined;
-  const version = s?.version as Record<string, unknown> | undefined;
-  const node = s?.node as Record<string, unknown> | undefined;
-  const chain = s?.chain as Record<string, unknown> | undefined;
-  const network = s?.network as Record<string, unknown> | undefined;
-  const time = s?.time as Record<string, unknown> | undefined;
+  const s = status;
+  const version = s?.version;
+  const proTxHash = hashText(s?.node?.proTxHash);
+  const chain = s?.chain;
+  const network = s?.network;
+  const time = s?.time;
+  const node = s?.node;
 
   return (
-    <Card title="Platform Status" loading={isLoading} error={error}>
-      {s && (
-        <div className="space-y-6">
-          <div>
-            <h4 className="text-sm font-medium text-gray-700 mb-3">Version Info</h4>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              <Stat label="DAPI" value={String(version?.dapiVersion ?? 'N/A')} />
-              <Stat label="Drive" value={String(version?.driveVersion ?? 'N/A')} />
-              <Stat label="Tenderdash" value={String(version?.tenderdashVersion ?? 'N/A')} />
-              <Stat label="Drive Protocol" value={String(version?.driveCurrentProtocol ?? 'N/A')} />
-            </div>
-          </div>
-
-          <div>
-            <h4 className="text-sm font-medium text-gray-700 mb-3">Chain Info</h4>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              <Stat label="Latest Block Height" value={chain?.latestBlockHeight ? formatNumber(String(chain.latestBlockHeight)) : 'N/A'} />
-              <Stat label="Core ChainLock Height" value={chain?.coreChainLockedHeight ? formatNumber(String(chain.coreChainLockedHeight)) : 'N/A'} />
-              <Stat
-                label="Catching Up"
-                value={
-                  chain?.catchingUp !== undefined ? (
-                    <span className={chain.catchingUp ? 'text-yellow-600' : 'text-green-600'}>
-                      {chain.catchingUp ? 'Yes' : 'No'}
-                    </span>
-                  ) : 'N/A'
+    <Card title="Platform status" method="getStatus">
+      <div className="space-y-6">
+        <ReadBoundary subject="platform status" loading={isLoading} error={error} hasData={!!s} onRetry={() => void refetch()}>
+          {s && <>
+          <p
+            className={`node-verdict ${chain?.catchingUp ? "node-verdict--warn" : ""}`}
+          >
+            {chain?.catchingUp === true
+              ? "Node reports it is catching up. Reads may lag behind the network."
+              : chain?.catchingUp === false
+                ? "Node reports it is synced. Responses have not been proof-checked."
+                : "This node did not report its sync state. See the raw response."}
+          </p>
+          <div
+            className="dh-sources mb-4"
+            aria-label="Platform response source"
+          >
+            <p className="dh-meta"><span>Source: Platform node</span><span>Not proof-checked</span></p>
+            <p>
+              Responding node:{" "}
+              <HashValue
+                value={proTxHash}
+                label="Responding ProTx hash"
+                href={
+                  proTxHash
+                    ? window.dashhq.href("nodes", `/mn/${proTxHash}`, {
+                        network: selectedNetwork,
+                      })
+                    : undefined
                 }
               />
-              <Stat
-                label="Latest Block Hash"
-                value={chain?.latestBlockHash ? truncateHash(String(chain.latestBlockHash)) : 'N/A'}
-                mono
+            </p>
+            <p>
+              <a
+                href={window.dashhq.href("nodes", "/", {
+                  network: selectedNetwork,
+                })}
+              >
+                See network-wide health in Radar →
+              </a>
+            </p>
+            <p className="dh-meta mt-2">
+              <span className="read-age">Read <Freshness value={dataUpdatedAt} /></span><span>dapi-client 5.0.3</span>
+            </p>
+          </div>
+          <dl className="dh-stats node-key-stats">
+            <Stat
+              label="Block height"
+              value={
+                chain?.latestBlockHeight != null
+                  ? formatNumber(chain.latestBlockHeight)
+                  : "N/A"
+              }
+            />
+            <Stat
+              label="Core ChainLock"
+              value={
+                chain?.coreChainLockedHeight != null
+                  ? formatNumber(chain.coreChainLockedHeight)
+                  : "N/A"
+              }
+            />
+            <Stat
+              label="Peers"
+              value={
+                network?.peersCount != null
+                  ? String(network.peersCount)
+                  : "N/A"
+              }
+            />
+          </dl>
+          <details className="dh-disclosure">
+            <summary><span>Platform node details</span></summary>
+            <dl className="node-facts mt-3">
+              <div>
+                <dt>DAPI</dt>
+                <dd>{String(version?.dapiVersion ?? "Not reported")}</dd>
+              </div>
+              <div>
+                <dt>Drive</dt>
+                <dd>{String(version?.driveVersion ?? "Not reported")}</dd>
+              </div>
+              <div>
+                <dt>Tenderdash</dt>
+                <dd>
+                  <HashValue
+                    value={
+                      version?.tenderdashVersion
+                        ? String(version.tenderdashVersion)
+                        : undefined
+                    }
+                    label="Tenderdash build"
+                    full
+                  />
+                </dd>
+              </div>
+              <div>
+                <dt>Protocol</dt>
+                <dd>
+                  {version?.driveCurrentProtocol != null
+                    ? `v${version.driveCurrentProtocol}`
+                    : "Not reported"}
+                </dd>
+              </div>
+              <div>
+                <dt>Chain ID</dt>
+                <dd>{String(network?.chainId ?? "Not reported")}</dd>
+              </div>
+              <div>
+                <dt>Listening</dt>
+                <dd>
+                  {network?.listening === undefined
+                    ? "Not reported"
+                    : network.listening
+                      ? "Yes"
+                      : "No"}
+                </dd>
+              </div>
+              <div>
+                <dt>Latest block</dt>
+                <dd>
+                  <HashValue
+                    value={chain?.latestBlockHash}
+                    label="Latest Platform block hash"
+                  />
+                </dd>
+              </div>
+              <div>
+                <dt>Max peer height</dt>
+                <dd>
+                  {chain?.maxPeerBlockHeight != null
+                    ? formatNumber(chain.maxPeerBlockHeight)
+                    : "Not reported"}
+                </dd>
+              </div>
+              <div>
+                <dt>Node ID</dt>
+                <dd>
+                  <HashValue value={node?.nodeId} label="Platform node ID" />
+                </dd>
+              </div>
+              <div>
+                <dt>ProTx hash</dt>
+                <dd>
+                  <HashValue value={proTxHash} label="Node ProTx hash" />
+                </dd>
+              </div>
+              <div>
+                <dt>Current epoch</dt>
+                <dd>{String(time?.epoch ?? "Not reported")}</dd>
+              </div>
+            </dl>
+          </details>
+          </>}
+        </ReadBoundary>
+        <ReadBoundary subject="total credits" loading={creditsLoading} error={creditsError} hasData={!!credits} onRetry={() => void retryCredits()}>
+          {credits && (
+            <dl className="dh-stats">
+              <BalanceStat
+                credits={credits.totalCreditsInPlatform}
+                unit={unit}
+                label={`Platform balance · ${unit} equivalent`}
               />
-              <Stat label="Max Peer Block Height" value={chain?.maxPeerBlockHeight ? formatNumber(String(chain.maxPeerBlockHeight)) : 'N/A'} />
-            </div>
-          </div>
-
-          <div>
-            <h4 className="text-sm font-medium text-gray-700 mb-3">Network Info</h4>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              <Stat label="Chain ID" value={String(network?.chainId ?? 'N/A')} />
-              <Stat label="Peers" value={String(network?.peersCount ?? 'N/A')} />
-              <Stat
-                label="Listening"
-                value={
-                  network?.listening !== undefined ? (
-                    <span className={network.listening ? 'text-green-600' : 'text-gray-500'}>
-                      {network.listening ? 'Yes' : 'No'}
-                    </span>
-                  ) : 'N/A'
-                }
-              />
-            </div>
-          </div>
-
-          <div>
-            <h4 className="text-sm font-medium text-gray-700 mb-3">Node Info</h4>
-            <div className="grid grid-cols-2 gap-4">
-              <Stat label="Node ID" value={node?.nodeId ? truncateHash(String(node.nodeId)) : (node?.id ? truncateHash(String(node.id)) : 'N/A')} mono />
-              <Stat label="ProTxHash" value={node?.proTxHash ? truncateHash(String(node.proTxHash)) : 'N/A'} mono />
-              <Stat label="Current Epoch" value={String(time?.epoch ?? 'N/A')} />
-              {credits?.totalCreditsInPlatform !== undefined && (
-                <Stat
-                  label="Total Credits in Platform"
-                  value={formatCredits(credits.totalCreditsInPlatform)}
-                />
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+            </dl>
+          )}
+        </ReadBoundary>
+        {s && <JsonView data={s} label="Raw node response · Details" />}
+      </div>
     </Card>
   );
 }
