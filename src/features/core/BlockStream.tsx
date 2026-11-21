@@ -7,7 +7,7 @@ import { useNetworkStore } from '../../store/network';
 import { useBestBlockHeight } from '../../hooks/useBlockchainStatus';
 import { headerTimestamp } from '../../lib/block-freshness';
 import { formatRelativeTime } from '../../lib/format';
-import type { BlockHeaderStream } from '@dashevo/dapi-client';
+import type { BlockHeadersStream } from '@dashevo/dapi-client';
 
 interface BlockHeader {
   height: number;
@@ -20,7 +20,7 @@ export function BlockStream({ ticker = false, autoStart = false }: { ticker?: bo
   const [isStreaming, setIsStreaming] = useState(false);
   const [blocks, setBlocks] = useState<BlockHeader[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const streamRef = useRef<BlockHeaderStream | null>(null);
+  const streamRef = useRef<BlockHeadersStream | null>(null);
   const generation = useRef(0);
   const autoStarted = useRef(false);
   const [, refreshAge] = useState(0);
@@ -59,7 +59,7 @@ export function BlockStream({ ticker = false, autoStart = false }: { ticker?: bo
       stream.on('data', (response) => {
         if (generation.current !== run) return;
         const lock = response.getChainLock_asU8();
-        if (lock.length >= 4) {
+        if (lock.length === 132) {
           chainLockHeight = Math.max(chainLockHeight, new DataView(lock.buffer, lock.byteOffset, lock.byteLength).getUint32(0, true));
           setBlocks(previous => previous.map(block => ({ ...block, chainLocked: block.chainLocked || block.height <= chainLockHeight })));
         }
@@ -70,10 +70,11 @@ export function BlockStream({ ticker = false, autoStart = false }: { ticker?: bo
           const height = firstHeight + index;
           const hash = await client.core.getBlockHash(height);
           const timestamp = headerTimestamp(header);
-          return { height, hash, timestamp, chainLocked: height <= chainLockHeight };
+          return { height, hash, timestamp };
         })).then(batch => {
           if (generation.current !== run) return;
-          setBlocks(previous => [...batch, ...previous].filter((block, index, all) => index === all.findIndex(other => other.height === block.height)).sort((a, b) => b.height - a.height).slice(0, ticker ? 12 : 20));
+          const locked = batch.map(block => ({ ...block, chainLocked: block.height <= chainLockHeight }));
+          setBlocks(previous => [...locked, ...previous].filter((block, index, all) => index === all.findIndex(other => other.height === block.height)).sort((a, b) => b.height - a.height).slice(0, ticker ? 12 : 20));
         }).catch(fail);
       });
     } catch (err) { fail(err instanceof Error ? err : new Error(String(err))); }

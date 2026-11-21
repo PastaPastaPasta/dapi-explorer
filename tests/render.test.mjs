@@ -16,7 +16,7 @@ function moduleUrl(path, mocks = {}) {
     if (mocks[name]) return `from ${JSON.stringify('data:text/javascript;base64,' + Buffer.from(mocks[name]).toString('base64'))}`;
     if (!name.startsWith('.')) return `from ${JSON.stringify(pathToFileURL(require.resolve(name)).href)}`;
     const base = new URL(name, path);
-    const target = ['.ts', '.tsx'].map(ext => new URL(base.href + ext)).find(existsSync);
+    const target = ['', '.ts', '.tsx'].map(ext => new URL(base.href + ext)).find(url => /\.tsx?$/.test(url.pathname) && existsSync(url));
     return `from ${JSON.stringify(moduleUrl(target, mocks))}`;
   });
   return `data:text/javascript;base64,${Buffer.from(resolved).toString('base64')}`;
