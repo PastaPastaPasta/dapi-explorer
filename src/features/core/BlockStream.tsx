@@ -1,6 +1,6 @@
 import { HashValue } from '../../components/HashValue';
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { ReadError, Reading } from '../../components/ReadState';
+import { ReadBoundary, ReadError, Reading } from '../../components/ReadState';
 import { Card } from '../../components/Card';
 import { useDapi } from '../../hooks/useDapi';
 import { useNetworkStore } from '../../store/network';
@@ -124,8 +124,9 @@ export function BlockStream({ ticker = false, autoStart = false }: { ticker?: bo
           )}
         </div>
 
-        {heightLoading && <Reading subject="the starting block height" />}
-        {heightError && <ReadError error={heightError} subject="the starting block height" onRetry={() => void retryHeight()} />}
+        {!currentHeight && (
+          <ReadBoundary subject="the starting block height" loading={heightLoading} error={heightError} onRetry={() => void retryHeight()}>{null}</ReadBoundary>
+        )}
         {error && <ReadError error={new Error(error)} subject="the block stream" onRetry={() => void startStream()} />}
 
         {ticker && blocks.length > 0 && (

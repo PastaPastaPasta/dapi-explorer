@@ -263,3 +263,17 @@ test('polled Platform reads keep polling after a failed refresh', () => {
   assert.equal(epochHooks.usePlatformStatus().refetchInterval, 15000);
   assert.equal(epochHooks.useTotalCredits().refetchInterval, 30000);
 });
+
+const { BlockStream } = await import(moduleUrl(new URL('../src/features/core/BlockStream.tsx', import.meta.url), {
+  '../../hooks/useDapi': 'export const useDapi = () => ({});',
+  '../../store/network': "export const useNetworkStore = select => select({ network: 'mainnet' });",
+  '../../hooks/useBlockchainStatus': 'export const useBestBlockHeight = () => globalThis.bestHeightState;',
+}));
+test('the stream keeps its starting height when a height refresh fails', () => {
+  globalThis.bestHeightState = { data: 2390000, error: new Error('deadline') };
+  const stale = render(BlockStream, { ticker: true });
+  assert.doesNotMatch(stale, /role="alert"|starting block height/);
+  assert.doesNotMatch(stale, /<button[^>]*disabled/);
+  globalThis.bestHeightState = { error: new Error('deadline') };
+  assert.match(render(BlockStream, { ticker: true }), /Couldn’t read the starting block height/);
+});
