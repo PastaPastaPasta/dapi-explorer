@@ -17,7 +17,7 @@ export function getClient(network: NetworkType): DAPIClientInstance {
   clientInstance = new DAPIClient({
     network,
     dapiAddressProvider: new DiscoveringAddressProvider(network),
-    timeout: 10000,
+    timeout: 5000,
     retries: 2,
   }) as DAPIClientInstance;
   currentNetwork = network;

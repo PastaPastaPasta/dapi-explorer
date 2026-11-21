@@ -40,7 +40,7 @@ async function unlessNotFound<T>(read: Promise<T>): Promise<T | null> {
 export async function createPlatformReader(network: NetworkType): Promise<PlatformReader> {
   const provider = new DiscoveringAddressProvider(network);
   await provider.ready;
-  const client = new DAPIClient({ network, dapiAddressProvider: provider, timeout: 8000, retries: 2 }) as DAPIClientInstance;
+  const client = new DAPIClient({ network, dapiAddressProvider: provider, timeout: 5000, retries: 2 }) as DAPIClientInstance;
   const { platform } = client;
   return {
     status: () => platform.getStatus(),

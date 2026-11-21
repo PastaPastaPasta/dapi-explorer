@@ -18,7 +18,7 @@ export function useCurrentEpoch() {
   const network = useNetworkStore((s) => s.network);
   return useQuery({
     queryKey: ['currentEpoch', network],
-    queryFn: () => platformRead(network, (reader) => reader.currentEpoch(), 10000),
+    queryFn: () => platformRead(network, (reader) => reader.currentEpoch()),
     refetchInterval: (query) => query.state.status === 'error' ? false : 15000,
   });
 }
@@ -29,7 +29,7 @@ export function useEpochsInfo(start: number | undefined, count = 10) {
   return useQuery({
     queryKey: ['epochsInfo', network, start, count],
     enabled: start !== undefined,
-    queryFn: () => platformRead(network, async (reader) => ({ epochsInfo: await reader.epochs(start!, count) }), 10000),
+    queryFn: () => platformRead(network, async (reader) => ({ epochsInfo: await reader.epochs(start!, count) })),
   });
 }
 
