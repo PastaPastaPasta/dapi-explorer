@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Freshness } from "./Freshness";
 import { useNetworkStore } from "../store/network";
 
@@ -61,5 +61,40 @@ export function Reading({ subject }: { subject: string }) {
       <span className="dh-spin" aria-hidden="true" />
       {slow ? `Still reading ${subject} from the network… Other queries remain usable.` : `Reading ${subject} from a node…`}
     </p>
+  );
+}
+
+export function RefreshFailed({ subject, onRetry }: { subject: string; onRetry?: () => void }) {
+  return (
+    <p className="dh-meta refresh-failed mb-3" role="status">
+      <span>Couldn’t refresh {subject}</span>
+      <span>Showing the last successful read, retrying</span>
+      {onRetry && <span><button type="button" className="dh-btn dh-btn--sm" onClick={onRetry}>Retry now</button></span>}
+    </p>
+  );
+}
+
+export function ReadBoundary({
+  subject,
+  loading,
+  error,
+  hasData = false,
+  onRetry,
+  children,
+}: {
+  subject: string;
+  loading?: boolean;
+  error?: Error | null;
+  hasData?: boolean;
+  onRetry?: () => void;
+  children: ReactNode;
+}) {
+  if (loading) return <Reading subject={subject} />;
+  if (error && !hasData) return <ReadError error={error} subject={subject} onRetry={onRetry} />;
+  return (
+    <>
+      {error && <RefreshFailed subject={subject} onRetry={onRetry} />}
+      {children}
+    </>
   );
 }

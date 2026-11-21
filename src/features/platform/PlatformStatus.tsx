@@ -4,7 +4,7 @@ import { useNetworkStore } from "../../store/network";
 import { Freshness } from "../../components/Freshness";
 import { HashValue } from "../../components/HashValue";
 import { Card, Stat } from "../../components/Card";
-import { Reading, ReadError } from "../../components/ReadState";
+import { ReadBoundary } from "../../components/ReadState";
 import {
   usePlatformStatus,
   useTotalCredits,
@@ -37,14 +37,10 @@ export function PlatformStatus() {
   const node = s?.node;
 
   return (
-    <Card
-      title="Platform status" method="getStatus"
-      loading={isLoading}
-      error={error}
-      onRetry={() => void refetch()}
-    >
-      {s && (
-        <div className="space-y-6">
+    <Card title="Platform status" method="getStatus">
+      <div className="space-y-6">
+        <ReadBoundary subject="platform status" loading={isLoading} error={error} hasData={!!s} onRetry={() => void refetch()}>
+          {s && <>
           <p
             className={`node-verdict ${chain?.catchingUp ? "node-verdict--warn" : ""}`}
           >
@@ -54,40 +50,38 @@ export function PlatformStatus() {
                 ? "Node reports it is synced. Responses have not been proof-checked."
                 : "This node did not report its sync state. See the raw response."}
           </p>
-          {s && (
-            <div
-              className="dh-sources mb-4"
-              aria-label="Platform response source"
-            >
-              <p className="dh-meta"><span>Source: Platform node</span><span>Not proof-checked</span></p>
-              <p>
-                Responding node:{" "}
-                <HashValue
-                  value={proTxHash}
-                  label="Responding ProTx hash"
-                  href={
-                    proTxHash
-                      ? window.dashhq.href("nodes", `/mn/${proTxHash}`, {
-                          network: selectedNetwork,
-                        })
-                      : undefined
-                  }
-                />
-              </p>
-              <p>
-                <a
-                  href={window.dashhq.href("nodes", "/", {
-                    network: selectedNetwork,
-                  })}
-                >
-                  See network-wide health in Radar →
-                </a>
-              </p>
-              <p className="dh-meta mt-2">
-                <span className="read-age">Read <Freshness value={dataUpdatedAt} /></span><span>dapi-client 5.0.3</span>
-              </p>
-            </div>
-          )}
+          <div
+            className="dh-sources mb-4"
+            aria-label="Platform response source"
+          >
+            <p className="dh-meta"><span>Source: Platform node</span><span>Not proof-checked</span></p>
+            <p>
+              Responding node:{" "}
+              <HashValue
+                value={proTxHash}
+                label="Responding ProTx hash"
+                href={
+                  proTxHash
+                    ? window.dashhq.href("nodes", `/mn/${proTxHash}`, {
+                        network: selectedNetwork,
+                      })
+                    : undefined
+                }
+              />
+            </p>
+            <p>
+              <a
+                href={window.dashhq.href("nodes", "/", {
+                  network: selectedNetwork,
+                })}
+              >
+                See network-wide health in Radar →
+              </a>
+            </p>
+            <p className="dh-meta mt-2">
+              <span className="read-age">Read <Freshness value={dataUpdatedAt} /></span><span>dapi-client 5.0.3</span>
+            </p>
+          </div>
           <dl className="dh-stats node-key-stats">
             <Stat
               label="Block height"
@@ -196,26 +190,21 @@ export function PlatformStatus() {
               </div>
             </dl>
           </details>
-          {!creditsLoading && !creditsError && (
+          </>}
+        </ReadBoundary>
+        <ReadBoundary subject="total credits" loading={creditsLoading} error={creditsError} hasData={!!credits} onRetry={() => void retryCredits()}>
+          {credits && (
             <dl className="dh-stats">
               <BalanceStat
-                credits={credits?.totalCreditsInPlatform}
+                credits={credits.totalCreditsInPlatform}
                 unit={unit}
-                label="Platform balance · DASH equivalent"
+                label={`Platform balance · ${unit} equivalent`}
               />
             </dl>
           )}
-          {creditsLoading && <Reading subject="total credits" />}
-          {creditsError && (
-            <ReadError
-              error={creditsError}
-              subject="total credits"
-              onRetry={() => void retryCredits()}
-            />
-          )}
-          <JsonView data={s} label="Raw node response · Details" />
-        </div>
-      )}
+        </ReadBoundary>
+        {s && <JsonView data={s} label="Raw node response · Details" />}
+      </div>
     </Card>
   );
 }

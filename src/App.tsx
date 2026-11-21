@@ -19,7 +19,8 @@ const tabs = [
 
 function App() {
   const [identity] = useUrlParam('identity');
-  const [tab, setTab] = useUrlParam('tab', identity ? 'platform' : 'dashboard');
+  const [contract] = useUrlParam('contract');
+  const [tab, setTab] = useUrlParam('tab', identity || contract ? 'platform' : 'dashboard');
   const activeTab = tabs.some((item) => item.id === tab) ? tab : 'dashboard';
 
   return (

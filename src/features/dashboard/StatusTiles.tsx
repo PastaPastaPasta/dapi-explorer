@@ -17,6 +17,7 @@ export function StatusTiles() {
   const block = useQuery({
     queryKey: ['coreTipTime', network, height],
     enabled: height !== undefined,
+    placeholderData: (previous, previousQuery) => previousQuery?.queryKey[1] === network ? previous : undefined,
     queryFn: async () => headerTimestamp(await withDeadline(client.core.getBlockByHeight(height!))) * 1000,
   });
   const [now, setNow] = useState(Date.now);
@@ -25,8 +26,8 @@ export function StatusTiles() {
     return () => window.clearInterval(timer);
   }, []);
   const tiles = [
-    { label: 'Core', height, timestamp: block.data ?? null, target: 150, loading: core.isLoading || block.isLoading, failed: !!core.error || !!block.error },
-    { label: 'Platform', height: platform.data?.chain?.latestBlockHeight, timestamp: blockTimestamp(platform.data?.time?.block), target: 180, loading: platform.isLoading, failed: !!platform.error },
+    { label: 'Core', height, timestamp: block.data ?? null, target: 150, loading: core.isLoading || block.isLoading, failed: (!!core.error && !core.data) || (!!block.error && !block.data) },
+    { label: 'Platform', height: platform.data?.chain?.latestBlockHeight, timestamp: blockTimestamp(platform.data?.time?.block), target: 180, loading: platform.isLoading, failed: !!platform.error && !platform.data },
   ];
   return (
     <dl className="console-status-tiles">

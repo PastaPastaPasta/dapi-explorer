@@ -18,6 +18,7 @@ export function NetworkRecovery({ kind, id }: { kind: 'identity' | 'contract'; i
   const url = new URL(window.location.href);
   const href = window.dashhq.href('dapi', url.pathname + url.search, { network: other });
   url.searchParams.delete(kind);
+  url.searchParams.set('tab', 'platform');
   const listHref = window.dashhq.href('dapi', url.pathname + url.search, { network });
   const base58 = identifierToBase58(id);
   return <dashhq-not-found thing={kind} id-label="ID" network={network}

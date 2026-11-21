@@ -18,21 +18,10 @@ export function BlockchainStatus() {
     <Card
       title="Core status" method="getBlockchainStatus"
       loading={isLoading}
-      error={data ? null : error}
+      error={error}
+      hasData={!!data}
       onRetry={() => void refetch()}
     >
-      {data && error && (
-        <p className="dh-notice dh-notice--warn mb-4">
-          Refresh failed. Showing the last successful read.{" "}
-          <button
-            type="button"
-            className="dh-btn"
-            onClick={() => void refetch()}
-          >
-            Retry Core status
-          </button>
-        </p>
-      )}
       {status && !hasExpectedStructure && (
         <div>
           <p className="text-sm text-gray-500 mb-2">

@@ -59,7 +59,7 @@ export function BlockExplorer() {
             id="block-input" aria-describedby="block-input-help" required pattern={searchType === 'height' ? '[0-9]+' : '[0-9a-fA-F]{64}'}
             type="text"
             value={searchValue}
-            onChange={(e) => setSearchValue(e.target.value)}
+            onChange={(e) => setSearchValue(e.target.value.trim())}
             placeholder={searchType === 'height' ? 'Block height (e.g., 1000)' : 'Block hash'}
             className="dh-input dh-input--mono flex-1"
           />

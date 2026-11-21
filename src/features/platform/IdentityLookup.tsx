@@ -8,7 +8,7 @@ import { platformRead } from '../../lib/platform';
 import { useNetworkStore } from '../../store/network';
 import { BalanceStat } from '../../components/BalanceStat';
 import { NetworkRecovery } from '../../components/NetworkRecovery';
-import { identifierToBytes, identifierToBase58 } from '../../lib/identifier';
+import { identifierError, identifierToBytes, identifierToBase58 } from '../../lib/identifier';
 
 export function IdentityLookup() {
   const [submitted, setSubmitted] = useUrlParam('identity');
@@ -16,6 +16,8 @@ export function IdentityLookup() {
   useEffect(() => setIdentityId(submitted), [submitted]);
 
   const network = useNetworkStore((s) => s.network);
+  const unit = network === 'testnet' ? 'tDASH' : 'DASH';
+  const idError = submitted ? identifierError(submitted) : null;
 
   const { data, isFetching: isLoading, error, refetch } = useQuery({
     queryKey: ['identity', network, submitted],
@@ -28,13 +30,13 @@ export function IdentityLookup() {
       ]);
       return { identity, balance };
     },
-    enabled: !!submitted,
+    enabled: !!submitted && !idError,
   });
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (identityId.trim()) {
-      if (submitted === identityId.trim()) void refetch();
+      if (submitted === identityId.trim()) { if (!idError) void refetch(); }
       else setSubmitted(identityId.trim());
     }
   };
@@ -45,7 +47,8 @@ export function IdentityLookup() {
         <label className="dh-field__label" htmlFor="identity-input">Identity ID (base58 or hex)</label>
         <div className="dh-inline-form">
           <input
-            id="identity-input" aria-describedby="identity-input-help"
+            id="identity-input" aria-describedby={idError ? 'identity-input-help identity-input-error' : 'identity-input-help'}
+            aria-invalid={idError ? true : undefined}
             required
             title="Use a base58 Platform ID or 64 hexadecimal characters."
             type="text"
@@ -62,6 +65,7 @@ export function IdentityLookup() {
           </button>
         </div>
         <p className="dh-field__help" id="identity-input-help">Paste the base58 identity ID used in Explorer, or its 64-character hexadecimal representation.</p>
+        {idError && <p className="dh-field__error" id="identity-input-error">{idError}</p>}
       </form>
 
       {isLoading && <Reading subject="the lookup result" />}
@@ -73,7 +77,7 @@ export function IdentityLookup() {
       {data?.identity ? (
         <div className="space-y-4">
           {data.balance ? (
-            <dl className="dh-stats"><BalanceStat label="Balance · DASH equivalent" credits={data.balance.balance} unit={network === 'testnet' ? 'tDASH' : 'DASH'} /></dl>
+            <dl className="dh-stats"><BalanceStat label={`Balance · ${unit} equivalent`} credits={data.balance.balance} unit={unit} /></dl>
           ) : <p className="dh-notice dh-notice--info">The identity loaded, but its balance is unavailable. <button className="dh-btn" onClick={() => void refetch()}>Retry balance</button></p>}
           <div>
             <p className="text-xs text-gray-500 mb-2">Identity data</p>

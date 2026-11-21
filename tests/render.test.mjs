@@ -78,6 +78,10 @@ test('network recovery preserves both lookups and distinguishes pending, absent 
       assert.equal(href.searchParams.get('identity'), id);
       assert.equal(href.searchParams.get('contract'), id);
       assert.equal(href.searchParams.get('network'), 'mainnet');
+      const listHref = new URL(html.match(/ list-href="([^"]+)"/)[1].replaceAll('&amp;', '&'));
+      assert.equal(listHref.searchParams.get('tab'), 'platform');
+      assert.equal(listHref.searchParams.get(kind), null);
+      assert.equal(listHref.searchParams.get('network'), 'testnet');
       client.clear();
     }
   }
@@ -191,4 +195,71 @@ test('dashboard exposes the complete Core status record while keeping raw data f
   assert.match(html, /<dd>0<\/dd>/);
   assert.match(html, /Raw node response/);
   assert.doesNotMatch(html, /<details[^>]*\bopen\b|Core node details/);
+});
+
+test('a failed refresh keeps the last good epochs on screen with a quiet retry note', () => {
+  globalThis.epochPage = '';
+  globalThis.currentEpochState = { data: 1, error: new Error('deadline') };
+  globalThis.epochsState = { data: { epochsInfo: [{ number: 1 }, { number: 0 }] }, error: new Error('deadline') };
+  const html = render(EpochInfo);
+  assert.match(html, /Epoch #1/);
+  assert.match(html, /Current epoch/);
+  assert.match(html, /Couldn’t refresh the current epoch/);
+  assert.match(html, /Couldn’t refresh epochs/);
+  assert.doesNotMatch(html, /Couldn’t read|role="alert"/);
+});
+
+test('Core status keeps its last read when a refresh fails', () => {
+  globalThis.coreSummaryState = { error: new Error('Offline'), data: {
+    status: { status: 'READY', chain: { name: 'mainnet', blocksCount: 5 } }, source: 'node:443', readAt: Date.now(),
+  } };
+  const html = render(BlockchainStatus);
+  assert.match(html, /Couldn’t refresh core status/);
+  assert.match(html, /<dt>Block height<\/dt>/);
+  assert.doesNotMatch(html, /role="alert"/);
+});
+
+const { PlatformStatus } = await import(moduleUrl(new URL('../src/features/platform/PlatformStatus.tsx', import.meta.url), {
+  '../../store/network': "export const useNetworkStore = select => select({ network: 'testnet' });",
+  '../../hooks/usePlatformStatus': `
+    export const usePlatformStatus = () => globalThis.platformState;
+    export const useTotalCredits = () => globalThis.creditsState;`,
+}));
+const platformStatus = { chain: { latestBlockHeight: 42, catchingUp: false }, network: { chainId: 'dash-testnet-51' }, version: {}, time: {}, node: {} };
+
+test('Platform status and total credits fail independently and keep their last good reads', () => {
+  window.dashhq = { href: () => 'https://radar.dashhq.org/' };
+  globalThis.platformState = { error: new Error('Offline') };
+  globalThis.creditsState = { data: { totalCreditsInPlatform: 37892880000000000n } };
+  let html = render(PlatformStatus);
+  assert.match(html, /Couldn’t read platform status/);
+  assert.match(html, /378,928\.8|378928\.8/);
+  assert.match(html, /Platform balance · tDASH equivalent/);
+
+  globalThis.platformState = { data: platformStatus, dataUpdatedAt: Date.now() };
+  globalThis.creditsState = { error: new Error('Offline') };
+  html = render(PlatformStatus);
+  assert.match(html, /Node reports it is synced/);
+  assert.match(html, /Couldn’t read total credits/);
+
+  globalThis.platformState = { data: platformStatus, dataUpdatedAt: Date.now(), error: new Error('deadline') };
+  globalThis.creditsState = { data: { totalCreditsInPlatform: 1n }, error: new Error('deadline') };
+  html = render(PlatformStatus);
+  assert.match(html, /Node reports it is synced/);
+  assert.match(html, /Couldn’t refresh platform status/);
+  assert.match(html, /Couldn’t refresh total credits/);
+  assert.match(html, /tDASH equivalent/);
+  assert.doesNotMatch(html, /role="alert"/);
+
+  globalThis.platformState = { isLoading: true };
+  globalThis.creditsState = { data: { totalCreditsInPlatform: 1n } };
+  html = render(PlatformStatus);
+  assert.match(html, /Reading platform status/);
+  assert.match(html, /tDASH equivalent/);
+});
+
+test('polled Platform reads keep polling after a failed refresh', () => {
+  assert.equal(epochHooks.useCurrentEpoch().refetchInterval, 15000);
+  assert.equal(epochHooks.usePlatformStatus().refetchInterval, 15000);
+  assert.equal(epochHooks.useTotalCredits().refetchInterval, 30000);
 });

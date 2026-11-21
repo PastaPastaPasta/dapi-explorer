@@ -8,7 +8,7 @@ async function load(name) {
   const { outputText } = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2020 } });
   return import(`data:text/javascript;base64,${Buffer.from(outputText).toString('base64')}`);
 }
-const { identifierToBytes, identifierToBase58, bytesToHex } = await load('identifier');
+const { identifierToBytes, identifierToBase58, identifierError, bytesToHex } = await load('identifier');
 const { withDeadline, coreHealth, coreVerdict } = await load('request');
 
 test('Explorer base58 identities and hex refer to exactly the same 32 bytes', () => {
@@ -20,6 +20,11 @@ test('Explorer base58 identities and hex refer to exactly the same 32 bytes', ()
   assert.equal(identifierToBase58('0'.repeat(64)), '1'.repeat(32));
   assert.throws(() => identifierToBytes('1'.repeat(44)), /32 bytes/);
   assert.throws(() => identifierToBytes('0'.repeat(43)), /base58/);
+});
+test('malformed IDs give a field message instead of a network read', () => {
+  assert.equal(identifierError('7P3ZsJHh61jhvVwaxh1xyNx7wkCqiDdkhw2EpCfTn9J'), null);
+  assert.match(identifierError('1'.repeat(44)), /32 bytes/);
+  assert.match(identifierError('not an id'), /base58/);
 });
 test('health errors and unknown health can never produce green reachability', () => {
   assert.equal(coreHealth('READY').label, 'Reachable');

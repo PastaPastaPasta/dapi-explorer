@@ -1,5 +1,5 @@
 import { useUrlParam } from "../../lib/location";
-import { ReadError, Reading } from "../../components/ReadState";
+import { ReadBoundary, ReadError, Reading } from "../../components/ReadState";
 import { Card, Stat } from "../../components/Card";
 import { JsonView } from "../../components/JsonView";
 import {
@@ -35,47 +35,40 @@ export function EpochInfo() {
   return (
     <Card title="Epochs and consensus" method="getEpochsInfo">
       <div className="space-y-6">
-        {epochsLoading && <Reading subject="epochs" />}
-        {epochsError && (
-          <ReadError
-            error={epochsError}
-            subject="epochs"
-            onRetry={() => void retryEpochs()}
-          />
-        )}
-        {currentLoading && <Reading subject="the current epoch" />}
-        {currentError && <ReadError error={currentError} subject="the current epoch" onRetry={() => void retryCurrent()} />}
-        {!currentError && !epochsError && !currentLoading && !epochsLoading && (
-        <section aria-label="Recent epochs">
-          <h3 className="dh-h3 mb-3">Recent epochs</h3>
-          <p className="dh-sources mb-3">Source: Platform epoch records, newest first. Not proof-checked.</p>
-          {epochs.length > 0 && (
-            <>
-              <ol className="epoch-list">
-                {epochs.map((epoch) => (
-                  <li key={epoch.number}>
-                    <p className="dh-meta mb-2">
-                      <strong>Epoch #{epoch.number}</strong>
-                      {epoch.number === currentEpoch && <span className="dh-badge dh-badge--info">Current epoch</span>}
-                    </p>
-                    <p className="dh-meta">
-                      <span>Start block {epoch.firstBlockHeight != null ? formatNumber(epoch.firstBlockHeight) : 'Not reported'}</span>
-                      <span>Core block {epoch.firstCoreBlockHeight != null ? formatNumber(epoch.firstCoreBlockHeight) : 'Not reported'}</span>
-                      <span>Start time {epoch.startTime != null ? formatTimestamp(epoch.startTime, 'milliseconds') : 'Not reported'}</span>
-                      <span>Fee multiplier {epoch.feeMultiplier?.toFixed?.(4) ?? 'Not reported'}</span>
-                    </p>
-                  </li>
-                ))}
-              </ol>
-              <div className="dh-actions mt-4">
-                {earliest !== undefined && earliest > 0 && <button className="dh-btn" onClick={() => setPage(String(earliest - 1))}>Show earlier</button>}
-                {requested !== undefined && <button className="dh-btn" onClick={() => setPage('')}>Back to latest</button>}
-              </div>
-            </>
-          )}
-          {!currentLoading && !currentError && !epochsLoading && !epochsError && epochsData && epochs.length === 0 && <p>No epochs returned by this node.</p>}
-        </section>
-        )}
+        <ReadBoundary subject="the current epoch" loading={currentLoading} error={currentError} hasData={currentEpoch !== undefined} onRetry={() => void retryCurrent()}>
+          <ReadBoundary subject="epochs" loading={epochsLoading} error={epochsError} hasData={!!epochsData} onRetry={() => void retryEpochs()}>
+            {epochsData && (
+              <section aria-label="Recent epochs">
+                <h3 className="dh-h3 mb-3">Recent epochs</h3>
+                <p className="dh-sources mb-3">Source: Platform epoch records, newest first. Not proof-checked.</p>
+                {epochs.length > 0 ? (
+                  <>
+                    <ol className="epoch-list">
+                      {epochs.map((epoch) => (
+                        <li key={epoch.number}>
+                          <p className="dh-meta mb-2">
+                            <strong>Epoch #{epoch.number}</strong>
+                            {epoch.number === currentEpoch && <span className="dh-badge dh-badge--info">Current epoch</span>}
+                          </p>
+                          <p className="dh-meta">
+                            <span>Start block {epoch.firstBlockHeight != null ? formatNumber(epoch.firstBlockHeight) : 'Not reported'}</span>
+                            <span>Core block {epoch.firstCoreBlockHeight != null ? formatNumber(epoch.firstCoreBlockHeight) : 'Not reported'}</span>
+                            <span>Start time {epoch.startTime != null ? formatTimestamp(epoch.startTime, 'milliseconds') : 'Not reported'}</span>
+                            <span>Fee multiplier {epoch.feeMultiplier?.toFixed?.(4) ?? 'Not reported'}</span>
+                          </p>
+                        </li>
+                      ))}
+                    </ol>
+                    <div className="dh-actions mt-4">
+                      {earliest !== undefined && earliest > 0 && <button className="dh-btn" onClick={() => setPage(String(earliest - 1))}>Show earlier</button>}
+                      {requested !== undefined && <button className="dh-btn" onClick={() => setPage('')}>Back to latest</button>}
+                    </div>
+                  </>
+                ) : <p>No epochs returned by this node.</p>}
+              </section>
+            )}
+          </ReadBoundary>
+        </ReadBoundary>
         <details className="dh-disclosure">
           <summary><span>Advanced: legacy consensus parameters</span></summary>
           <p className="text-sm text-gray-500">

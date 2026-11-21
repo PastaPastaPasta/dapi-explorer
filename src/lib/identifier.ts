@@ -50,6 +50,15 @@ export function identifierToBytes(input: string): Uint8Array {
   return Uint8Array.from(bytes);
 }
 
+export function identifierError(input: string): string | null {
+  try {
+    identifierToBytes(input);
+    return null;
+  } catch (err) {
+    return err instanceof Error ? err.message : String(err);
+  }
+}
+
 export function identifierToBase58(input: string): string {
   return hexToBase58(bytesToHex(identifierToBytes(input)));
 }

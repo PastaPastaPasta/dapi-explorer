@@ -7,7 +7,7 @@ import { NetworkRecovery } from '../../components/NetworkRecovery';
 import { JsonView } from '../../components/JsonView';
 import { platformRead } from '../../lib/platform';
 import { useNetworkStore } from '../../store/network';
-import { identifierToBytes, identifierToBase58 } from '../../lib/identifier';
+import { identifierError, identifierToBytes, identifierToBase58 } from '../../lib/identifier';
 
 const KNOWN_CONTRACTS = [
   {
@@ -23,6 +23,7 @@ export function DataContractViewer() {
   useEffect(() => setContractId(submitted), [submitted]);
 
   const network = useNetworkStore((s) => s.network);
+  const idError = submitted ? identifierError(submitted) : null;
 
   const { data, isFetching: isLoading, isSuccess, error, refetch } = useQuery({
     queryKey: ['dataContract', network, submitted],
@@ -31,13 +32,13 @@ export function DataContractViewer() {
       const idBytes = identifierToBytes(submitted);
       return platformRead(network, (reader) => reader.contract(idBytes));
     },
-    enabled: !!submitted,
+    enabled: !!submitted && !idError,
   });
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (contractId.trim()) {
-      if (submitted === contractId.trim()) void refetch();
+      if (submitted === contractId.trim()) { if (!idError) void refetch(); }
       else setSubmitted(contractId.trim());
     }
   };
@@ -53,7 +54,8 @@ export function DataContractViewer() {
         <label className="dh-field__label" htmlFor="contract-input">Contract ID (base58 or hex)</label>
         <div className="dh-inline-form">
           <input
-            id="contract-input" aria-describedby="contract-input-help"
+            id="contract-input" aria-describedby={idError ? 'contract-input-help contract-input-error' : 'contract-input-help'}
+            aria-invalid={idError ? true : undefined}
             required
             title="Use a base58 Platform ID or 64 hexadecimal characters."
             type="text"
@@ -70,6 +72,7 @@ export function DataContractViewer() {
           </button>
         </div>
         <p className="dh-field__help" id="contract-input-help">Use a base58 contract ID or its hexadecimal representation.</p>
+        {idError && <p className="dh-field__error" id="contract-input-error">{idError}</p>}
       </form>
 
       <div className="mb-4">

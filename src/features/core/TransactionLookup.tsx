@@ -45,7 +45,7 @@ export function TransactionLookup() {
             title="Use a 32-byte ID: 64 hexadecimal characters."
             type="text"
             value={txid}
-            onChange={(e) => setTxid(e.target.value)}
+            onChange={(e) => setTxid(e.target.value.trim())}
             placeholder="Transaction ID (txid)"
             className="dh-input dh-input--mono flex-1"
           />

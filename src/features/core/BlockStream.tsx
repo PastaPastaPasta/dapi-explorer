@@ -55,7 +55,11 @@ export function BlockStream({ ticker = false, autoStart = false }: { ticker?: bo
       if (generation.current !== run) { stream.cancel(); return; }
       streamRef.current = stream;
       stream.on('error', fail);
-      stream.on('end', () => { if (generation.current === run) stopStream(); });
+      stream.on('end', () => {
+        if (generation.current !== run) return;
+        streamRef.current = null;
+        setIsStreaming(false);
+      });
       stream.on('data', (response) => {
         if (generation.current !== run) return;
         const lock = response.getChainLock_asU8();

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Reading, ReadError } from './ReadState';
+import { ReadBoundary } from './ReadState';
 
 interface CardProps {
   title: string;
@@ -8,10 +8,11 @@ interface CardProps {
   className?: string;
   loading?: boolean;
   error?: Error | null;
+  hasData?: boolean;
   onRetry?: () => void;
 }
 
-export function Card({ title, method, children, className = '', loading, error, onRetry }: CardProps) {
+export function Card({ title, method, children, className = '', loading, error, hasData, onRetry }: CardProps) {
   return (
     <div className={`dh-card dh-card--flush ${className}`}>
       <div className="dh-card__head response-head">
@@ -19,13 +20,9 @@ export function Card({ title, method, children, className = '', loading, error, 
         <span className="dh-badge dh-badge--reported">Reported</span>
       </div>
       <div className="px-4 pb-4 md:px-5">
-        {loading ? (
-          <Reading subject={title.toLowerCase()} />
-        ) : error ? (
-          <ReadError error={error} subject={title.toLowerCase()} onRetry={onRetry} />
-        ) : (
-          children
-        )}
+        <ReadBoundary subject={title.toLowerCase()} loading={loading} error={error} hasData={hasData} onRetry={onRetry}>
+          {children}
+        </ReadBoundary>
       </div>
     </div>
   );
