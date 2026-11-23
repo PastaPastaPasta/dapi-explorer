@@ -168,7 +168,7 @@ export function BlockStream({ ticker = false, autoStart = false }: { ticker?: bo
                       <span
                         className={`dh-badge ${
                           block.chainLocked
-                            ? 'dh-badge--good'
+                            ? 'dh-badge--neutral'
                             : 'dh-badge--outline'
                         }`}
                       >
