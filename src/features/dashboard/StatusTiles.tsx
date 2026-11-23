@@ -38,7 +38,7 @@ export function StatusTiles() {
             <dt className="dh-stat__label">{tile.label}</dt>
             <dd className="dh-stat__value">{tile.height != null ? formatNumber(String(tile.height)) : '—'}</dd>
             <dd className="block-status__age">{tile.loading ? 'Reading last block…' : tile.failed ? 'Read failed' : tile.timestamp === null ? 'Block time not reported' : tile.timestamp > now ? 'Block time is ahead' : `Last block ${formatRelativeTime(tile.timestamp / 1000)}`}</dd>
-            <dd className="block-status__target">{state === 'good' ? 'On time · within' : state === 'warn' ? 'Late · over' : 'Unknown ·'} 2× target ({tile.target * 2}s)</dd>
+            <dd className="block-status__target dh-meta"><span className="block-status__state">{state === 'good' ? 'On time' : state === 'warn' ? 'Late' : 'Unknown'}</span><span>{state === 'good' ? `within 2× target (${tile.target * 2}s)` : state === 'warn' ? `over 2× target (${tile.target * 2}s)` : `2× target is ${tile.target * 2}s`}</span></dd>
           </div>
         );
       })}
