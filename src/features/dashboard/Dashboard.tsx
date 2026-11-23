@@ -7,9 +7,11 @@ export function Dashboard() {
     <div className="dashboard-grid">
       <div className="space-y-6 dashboard-diagnostics">
         <BlockchainStatus />
+      </div>
+      <div className="space-y-6">
+        <BlockStream ticker />
         <PlatformStatus />
       </div>
-      <BlockStream ticker />
     </div>
   );
 }

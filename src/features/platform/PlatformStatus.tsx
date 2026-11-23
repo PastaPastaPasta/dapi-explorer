@@ -79,7 +79,7 @@ export function PlatformStatus() {
               </a>
             </p>
             <p className="dh-meta mt-2">
-              <span className="read-age">Read <Freshness value={dataUpdatedAt} /></span><span>dapi-client 5.0.3</span>
+              <span className="read-age">Read <Freshness value={dataUpdatedAt} /></span>
             </p>
           </div>
           <dl className="dh-stats node-key-stats">
@@ -111,6 +111,10 @@ export function PlatformStatus() {
           <details className="dh-disclosure">
             <summary><span>Platform node details</span></summary>
             <dl className="node-facts mt-3">
+              <div>
+                <dt>Client</dt>
+                <dd>dapi-client 5.0.3</dd>
+              </div>
               <div>
                 <dt>DAPI</dt>
                 <dd>{String(version?.dapiVersion ?? "Not reported")}</dd>

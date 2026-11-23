@@ -48,7 +48,7 @@ summary { cursor: pointer; color: var(--dh-brand-ink); }
 }
 
 
-.console-band { background: var(--dh-surface); border-bottom: 1px solid var(--dh-line); }
+.console-band { border-bottom: 1px solid var(--dh-line); }
 .console-heading { padding-bottom: 24px; }
 .console-band .console-header { margin-bottom: 24px; }
 .console-content { padding-top: 32px; padding-bottom: 40px; }
@@ -59,8 +59,8 @@ summary { cursor: pointer; color: var(--dh-brand-ink); }
 .block-status--warn { border-color: color-mix(in srgb, var(--dh-warn) 55%, var(--dh-line)); }
 .block-status--warn .block-status__age { color: var(--dh-warn); }
 .block-status__age { font-size: 15px; font-weight: 600; }
-.block-status__target { font-size: 13px; color: var(--dh-ink-2); }
-.response-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.block-status__target { font-size: 14px; color: var(--dh-ink-2); }
+.response-head { display: flex; align-items: baseline; justify-content: space-between; gap: 4px 12px; flex-wrap: wrap; }
 .json-head { padding: 8px 12px; margin-block: 12px; }
 .json-details > summary { padding-block: 12px; }
 .dashboard-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: start; }
@@ -70,7 +70,7 @@ summary { cursor: pointer; color: var(--dh-brand-ink); }
 .block-ticker__tile { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 8px; background: var(--dh-tier-platform); color: var(--dh-tier-platform-ink); font-size: 14px; font-weight: 700; }
 .block-ticker__list small { display: block; color: var(--dh-ink-2); font-size: 13px; }
 .block-ticker__age { text-align: right; font-size: 14px; }
-@media (max-width: 800px) { .dashboard-grid { grid-template-columns: minmax(0, 1fr); } .block-ticker { grid-row: 1; } }
+@media (max-width: 800px) { .dashboard-grid { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 640px) {
   .console-status-tiles { gap: 12px; }
   .block-status { padding: 12px; }
@@ -78,4 +78,6 @@ summary { cursor: pointer; color: var(--dh-brand-ink); }
   .console-content { padding-top: 24px; }
   .block-ticker__list li { gap: 8px; }
 }
-.response-method { display: block; color: var(--dh-ink-2); font-size: 13px; overflow-wrap: anywhere; margin-top: 4px; }
+.response-method { color: var(--dh-ink-2); font-size: 13px; overflow-wrap: anywhere; }
+@media (min-width: 641px) { .node-key-stats .dh-stat__value { font-size: 22px; font-stretch: 100%; overflow-wrap: anywhere; } }
+.node-key-stats .dh-stat__label { min-height: 2.6em; }
