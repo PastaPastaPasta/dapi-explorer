@@ -16,8 +16,8 @@ export function Card({ title, method, children, className = '', loading, error, 
   return (
     <div className={`dh-card dh-card--flush ${className}`}>
       <div className="dh-card__head response-head">
-        <div><h2 className="dh-h3">{title}</h2>{method && <code className="response-method">{method}</code>}</div>
-        <span className="dh-badge dh-badge--reported">Reported</span>
+        <h2 className="dh-h3">{title}</h2>
+        {method && <code className="response-method" title="DAPI method">{method}</code>}
       </div>
       <div className="px-4 pb-4 md:px-5">
         <ReadBoundary subject={title.toLowerCase()} loading={loading} error={error} hasData={hasData} onRetry={onRetry}>

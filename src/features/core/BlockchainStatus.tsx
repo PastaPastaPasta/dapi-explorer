@@ -23,11 +23,14 @@ export function BlockchainStatus() {
       onRetry={() => void refetch()}
     >
       {status && !hasExpectedStructure && (
-        <div>
-          <p className="text-sm text-gray-500 mb-2">
-            Raw response (unexpected format):
+        <div className="dh-error mb-3" role="status">
+          <p className="dh-error__title">Couldn’t read this node’s status.</p>
+          <p className="text-sm mt-1">
+            The node answered, but without its chain details. Try again, or change the network in the bar.
           </p>
-          <JsonView data={status} />
+          <button className="mt-3 dh-btn" onClick={() => void refetch()}>
+            Try again
+          </button>
         </div>
       )}
       {status && hasExpectedStructure && (

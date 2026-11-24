@@ -24,7 +24,7 @@ export function JsonView({ data, maxHeight = '400px', label = 'Details · raw re
   return (
     <details className="dh-disclosure json-details">
       <summary><span>{label}</span></summary>
-      <div className="response-head json-head"><span>Node response</span><span className="dh-badge dh-badge--reported">Reported</span></div>
+      <div className="response-head json-head"><span>Node response, as reported</span></div>
       <button
         onClick={() => setExpanded(!expanded)}
         className="mb-2 dh-btn dh-btn--sm"
